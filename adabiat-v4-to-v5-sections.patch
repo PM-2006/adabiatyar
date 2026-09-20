@@ -1,0 +1,1461 @@
+diff --git a/README.md b/README.md
+index 89d4693..6815138 100644
+--- a/README.md
++++ b/README.md
+@@ -1,66 +1,40 @@
+-# ادبیات‌یار — MVP v0.2
++# ادبیات‌یار — MVP v0.5
+ 
+-نسخه دوم نمونه سایت آموزش ادبیات فارسی.
++ساختار جدید هر درس:
+ 
+-## تغییرات این نسخه
+-- پشتیبانی از نوع درس `poetry` و `prose`
+-- در شعر: هر بیت یک `TeachingUnit`
+-- در نثر: هر یک یا دو پاراگراف یک `TeachingUnit`
+-- توضیح‌های اختصاصی زیر هر بخش:
+-  - معنی
+-  - مفهوم
+-  - واژه
+-  - نکته ادبی
+-  - نکته زبانی
++- A) حفظیات
++  - مقدمه
++  - واژه‌نامه: درسنامه + جعبه لایتنر
+   - املا
+-  - نکته امتحانی
+-- ظاهر کتابی‌تر و تمیزتر برای صفحه تدریس
+-- حفظ مسیر مستقل سؤال‌ها
+-
+-## اجرای پروژه
+-
+-```bash
+-npm install
+-npm run dev
++- B) معنی و مفهوم: درسنامه + سؤال
++- C) آرایه: درسنامه + تمرین تشخیص آرایه + سؤال
++- D) دستور زبان: درسنامه + سؤال
++- E) قلمرو: فکری / ادبی / زبانی، هرکدام عادی و پیشرفته
++- F) روان‌خوانی / حکایت / شعرخوانی
++- G) سؤالات امتحان نهایی
++- H) جمع‌بندی
++
++## تگ سؤال‌ها
++
++هر سؤال فقط یک بار در JSON ذخیره می‌شود و با `tags` در چند بخش قابل نمایش است. مثال:
++
++```json
++{
++  "tags": ["آرایه", "امتحان نهایی", "خرداد ۱۴۰۴"]
++}
+ ```
+ 
+-سپس:
+-`http://localhost:3000`
+-
+-## محل ورود محتوا
+-فایل اصلی محتوای نمونه:
+-`lib/data.ts`
+-
+-برای یک درس شعر:
+-- `textType: "poetry"`
+-- هر بیت در `teachingUnits`
++این سؤال هم در بخش آرایه و هم در امتحان نهایی دیده می‌شود.
+ 
+-برای یک درس نثر:
+-- `textType: "prose"`
+-- هر یک یا دو پاراگراف در `teachingUnits`
+-
+-## پنل مدیریت محتوا
+-
+-در این نسخه مسیر زیر اضافه شده است:
++## پنل ادمین
+ 
+ `/admin`
+ 
+-امکانات فعلی پنل:
+-- افزودن و حذف درس
+-- ویرایش عنوان، نوع متن، شاعر/نویسنده و مقدمه
+-- افزودن، حذف و مرتب‌سازی پارت‌های شعر یا نثر
+-- افزودن توضیح با نوع معنی، مفهوم، واژه، آرایه، دستور، املا و نکته امتحانی
+-- مدیریت واژه‌نامه
+-- ساخت سؤال چهارگزینه‌ای و تعیین جواب صحیح
+-- ذخیره Draft در LocalStorage مرورگر
+-- Import/Export فایل JSON برای بکاپ و انتقال محتوا
++تب‌های پنل با ساختار جدید درس یکسان هستند. Import فایل JSON قدیمی نیز پشتیبانی می‌شود و داده قدیمی به ساختار جدید مهاجرت می‌کند.
+ 
+-### نکته مهم انتشار
+-ذخیره فعلی برای تست پنل در همان مرورگر است و محتوای عمومی سایت را روی سرور تغییر نمی‌دهد. برای استفاده واقعی روی Vercel باید در مرحله بعد دیتابیس (مثلاً Supabase) و احراز هویت مدیر اضافه شود. ساختار این پنل برای همین اتصال آماده شده است.
++## اجرا
+ 
+-## نسخه v4 — بازطراحی بصری
+-
+-- فونت Vazirmatn با `next/font/google`
+-- زبان بصری نزدیک به پروژه Ejigma: پس‌زمینه تیره، grid ظریف، glow، کارت‌های glass و hover نرم
+-- هویت رنگی مستقل: سبز زمردی + طلایی
+-- یکدست شدن صفحات خانه، درس، تدریس، سؤال‌ها، جمع‌بندی و پنل ادمین
++```bash
++npm install
++npm run dev
++```
+diff --git a/app/admin/page.tsx b/app/admin/page.tsx
+index 123ab5a..55b2dff 100644
+--- a/app/admin/page.tsx
++++ b/app/admin/page.tsx
+@@ -1,23 +1,13 @@
+ import AdminStudio from "@/components/admin-studio";
+ 
+-export const metadata = {
+-  title: "پنل مدیریت محتوا | ادبیات‌یار"
+-};
++export const metadata = { title: "پنل مدیریت محتوا | ادبیات‌یار" };
+ 
+ export default function AdminPage() {
+   return (
+     <section className="shell section adminPage">
+       <div className="adminPageHeader">
+-        <div>
+-          <span className="eyebrow">پنل مدیریت محتوا</span>
+-          <h1>ویرایش درس‌ها بدون کدنویسی</h1>
+-          <p>
+-            درس، بیت یا پاراگراف، توضیحات، واژه‌ها و سؤال‌ها را از همین صفحه اضافه یا ویرایش کن.
+-          </p>
+-        </div>
+-        <div className="adminWarning">
+-          نسخه فعلی برای ساخت و تست محتواست. ذخیره‌ها در همین مرورگر نگه داشته می‌شوند؛ برای انتشار عمومی، مرحله بعد دیتابیس و ورود مدیر را وصل می‌کنیم.
+-        </div>
++        <div><span className="eyebrow">پنل مدیریت محتوا</span><h1>محتوای هر درس را موضوع‌به‌موضوع وارد کن</h1><p>حفظیات، معنی و مفهوم، آرایه، دستور، قلمروها، روان‌خوانی، امتحان نهایی و جمع‌بندی هرکدام تب مستقل دارند.</p></div>
++        <div className="adminWarning">ذخیره‌ها فعلاً در همین مرورگر نگه داشته می‌شوند. بعد از هر جلسه «خروجی / بکاپ JSON» بگیر. فایل‌های JSON نسخه قبلی نیز هنگام Import به ساختار جدید تبدیل می‌شوند.</div>
+       </div>
+       <AdminStudio />
+     </section>
+diff --git a/app/globals.css b/app/globals.css
+index 7041f6f..6d58910 100644
+--- a/app/globals.css
++++ b/app/globals.css
+@@ -603,3 +603,35 @@ blockquote{border-right-color:var(--gold);background:rgba(226,184,93,.06);color:
+   .floatingChipTop{top:8%}.floatingChipBottom{bottom:6%}
+   .visualOrbitOne{width:280px;height:280px}.visualOrbitTwo{width:215px;height:215px}
+ }
++
++/* v5: section-based lesson architecture */
++.sectionCardsGrid{
++  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:26px
++}
++.sectionRouteCard{
++  position:relative;overflow:hidden;min-height:230px;padding:26px;border:1px solid var(--line);border-radius:26px;
++  background:linear-gradient(145deg,rgba(255,255,255,.065),rgba(255,255,255,.025));
++  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 24px 64px rgba(0,0,0,.18);transition:.25s ease
++}
++.sectionRouteCard:after{content:"";position:absolute;width:180px;height:180px;border-radius:50%;background:rgba(46,196,154,.09);filter:blur(44px);left:-60px;bottom:-70px}
++.sectionRouteCard:hover{transform:translateY(-6px);border-color:rgba(255,255,255,.24)}
++.sectionRouteTop{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
++.sectionLetter{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:var(--gold-soft);color:#f1d28a;font-size:.78rem;font-weight:900;border:1px solid rgba(226,184,93,.18)}
++.sectionLetter.large{width:58px;height:58px;border-radius:18px;font-size:1rem;flex:0 0 auto}
++.sectionIcon{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:var(--primary-soft);color:#9cf1d5;font-size:1.15rem;font-weight:900;border:1px solid rgba(46,196,154,.17)}
++.sectionRouteCard h2{color:#fff;margin-bottom:8px}.sectionRouteCard p{color:var(--muted);min-height:58px}.sectionRouteCard strong{color:#8de8c9}
++.sectionPageHeader{display:flex;align-items:flex-start;gap:18px;margin-bottom:38px;padding:28px;border:1px solid var(--line);border-radius:26px;background:linear-gradient(145deg,rgba(255,255,255,.06),rgba(255,255,255,.025))}
++.sectionPageHeader h1{font-size:clamp(2rem,4vw,3.2rem);margin-bottom:6px}.sectionPageHeader p{color:var(--muted);margin:0}
++.lessonSectionBlock{padding:28px 0 38px;border-bottom:1px solid var(--line)}
++.lessonSectionBlock:last-child{border-bottom:0}.lessonSectionHeading{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}.lessonSectionHeading h2{color:#fff;margin:0}
++.compactTimeline{margin:0;max-width:none}.compactTimeline .unitBody{padding-bottom:24px}
++.domainLevelLabel{display:inline-flex;margin:6px 0 16px;padding:6px 12px;border-radius:999px;background:var(--primary-soft);color:#91ebcd;font-weight:900;font-size:.84rem;border:1px solid rgba(46,196,154,.17)}
++.domainLevelLabel.advanced{background:var(--gold-soft);color:#edcf88;border-color:rgba(226,184,93,.18);margin-top:20px}
++.leitnerPreview{display:grid;gap:10px}.leitnerPreview>p{color:var(--muted)}.leitnerRow{display:flex;justify-content:space-between;gap:18px;padding:14px 16px;border:1px solid var(--line);border-radius:14px;background:rgba(255,255,255,.035)}.leitnerRow strong{color:#8de8c9}.leitnerRow span{color:var(--muted);font-size:.86rem}
++.spellingGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.spellingCard{padding:18px;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.035)}.spellingCard strong{display:block;color:#fff;font-size:1.1rem}.spellingCard p{color:#c7d2ce}.spellingCard small,.spellingCard span{display:block;color:var(--muted);margin-top:5px}
++.questionTags,.tagPreview{display:flex;flex-wrap:wrap;gap:6px}.questionTags span,.tagPreview span{padding:3px 8px;border-radius:999px;background:rgba(46,196,154,.09);border:1px solid rgba(46,196,154,.16);color:#9ae9cf;font-size:.7rem}.examPeriod{display:inline-flex;margin-bottom:10px;padding:4px 9px;border-radius:999px;background:var(--gold-soft);color:#edcf88;font-size:.76rem;font-weight:900}.tagExplanation,.adminInfoBox{padding:14px 16px;border-radius:15px;background:rgba(226,184,93,.07);border:1px solid rgba(226,184,93,.17);color:#e3d2a8;margin-bottom:18px}
++.practiceList{display:grid;gap:15px}.practiceCard{padding:22px;border:1px solid var(--line);border-radius:20px;background:rgba(255,255,255,.035)}.artChips{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}.artChips button{padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#dce6e2;cursor:pointer}.artChips button.active{border-color:rgba(226,184,93,.48);background:rgba(226,184,93,.10)}.artChips button.correct{background:var(--success-bg);border-color:rgba(69,201,140,.45)}.artChips button.wrong{background:var(--danger-bg);border-color:rgba(255,122,115,.45)}
++.majorAdminTabs{display:flex;flex-wrap:wrap;gap:7px}.majorAdminTabs button{flex:0 0 auto}.subTabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px;padding-bottom:16px;border-bottom:1px solid var(--line)}.subTabs button,.levelSwitch button{padding:8px 13px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.035);color:#b9c8c3;cursor:pointer}.subTabs button.active,.levelSwitch button.active{background:linear-gradient(135deg,var(--primary),#1e8b70);border-color:transparent;color:#06100d;font-weight:900}.levelSwitch{display:flex;gap:8px;margin-bottom:18px}.noTopBorder{border-top:0;padding-top:0}.adminSubsectionHeader p{color:var(--muted);margin:4px 0 0;font-size:.86rem}.inlineSelect{display:flex;align-items:center;gap:8px}.inlineSelect span{color:var(--muted)}.inlineSelect select{min-width:150px}.artAnswerGrid{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 18px}.tagCheck{display:flex!important;align-items:center;gap:7px!important;width:auto!important;padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.03);cursor:pointer}.tagCheck.active{background:var(--success-bg);border-color:rgba(69,201,140,.35)}
++
++@media(max-width:850px){.sectionCardsGrid,.spellingGrid{grid-template-columns:1fr}.sectionRouteCard{min-height:200px}}
++@media(max-width:560px){.sectionPageHeader{padding:20px}.sectionPageHeader{flex-direction:column}.leitnerRow{flex-direction:column;gap:3px}.majorAdminTabs{overflow:auto;flex-wrap:nowrap;padding-bottom:8px}.majorAdminTabs button{white-space:nowrap}}
+diff --git a/app/lessons/[slug]/page.tsx b/app/lessons/[slug]/page.tsx
+index f1ffa0c..1b60664 100644
+--- a/app/lessons/[slug]/page.tsx
++++ b/app/lessons/[slug]/page.tsx
+@@ -1,60 +1,34 @@
+ import Link from "next/link";
+ import { notFound } from "next/navigation";
+-import { getLesson } from "@/lib/data";
++import { getLesson, sectionCards } from "@/lib/data";
+ 
+ export default async function LessonPage({ params }: { params: Promise<{ slug: string }> }) {
+   const { slug } = await params;
+   const lesson = getLesson(slug);
+   if (!lesson) notFound();
+ 
++  const finalCount = lesson.questions.filter((q) => q.sourceType === "final" || q.tags.includes("امتحان نهایی")).length;
++
+   return (
+     <section className="shell section">
+-      <div className="breadcrumb">
+-        <Link href="/lessons">درس‌ها</Link><span>/</span><span>{lesson.title}</span>
+-      </div>
++      <div className="breadcrumb"><Link href="/lessons">درس‌ها</Link><span>/</span><span>{lesson.title}</span></div>
+ 
+       <div className="lessonHero">
+         <div>
+-          <div className="lessonMeta">
+-            <span>{lesson.textTypeLabel}</span>
+-            <span>{lesson.teachingUnits.length} پارت آموزشی</span>
+-          </div>
++          <div className="lessonMeta"><span>{lesson.textTypeLabel}</span><span>{lesson.questions.length} سؤال</span><span>{finalCount} سؤال نهایی</span></div>
+           <h1>{lesson.title}</h1>
+           <p>{lesson.subtitle}</p>
+         </div>
+       </div>
+ 
+-      <div className="routeChoice">
+-        <Link className="routeCard teach" href={`/lessons/${slug}/teach`}>
+-          <span className="routeIcon">📖</span>
+-          <span className="routeKicker">مسیر تدریس</span>
+-          <h2>{lesson.textType === "poetry" ? "مطالعه بیت‌به‌بیت" : "مطالعه پاراگراف‌به‌پاراگراف"}</h2>
+-          <p>متن اصلی و توضیح‌های مربوط به همان بخش را کنار هم ببین.</p>
+-          <strong>شروع تدریس ←</strong>
+-        </Link>
+-
+-        <Link className="routeCard quiz" href={`/lessons/${slug}/questions`}>
+-          <span className="routeIcon">✓</span>
+-          <span className="routeKicker">مسیر تمرین</span>
+-          <h2>سؤال‌های آموزشی</h2>
+-          <p>بدون نیاز به خواندن درسنامه، مستقیماً وارد تمرین شو.</p>
+-          <strong>شروع سؤال‌ها ←</strong>
+-        </Link>
+-      </div>
+-
+-      <div className="partList">
+-        <div className="listHeading">
+-          <h2>موضوعات این درس</h2>
+-          <span>برای مرور موضوعی و تمرین</span>
+-        </div>
+-        {lesson.parts.map((part, index) => (
+-          <div className="partRow" key={part.id}>
+-            <span className="partIndex">{index + 1}</span>
+-            <div>
+-              <h3>{part.title}</h3>
+-              <p>{part.description}</p>
+-            </div>
+-          </div>
++      <div className="sectionCardsGrid">
++        {sectionCards.map((section) => (
++          <Link className={`sectionRouteCard section-${section.key}`} href={`/lessons/${slug}/section/${section.key}`} key={section.key}>
++            <div className="sectionRouteTop"><span className="sectionLetter">{section.letter}</span><span className="sectionIcon">{section.icon}</span></div>
++            <h2>{section.title}</h2>
++            <p>{section.description}</p>
++            <strong>ورود به بخش ←</strong>
++          </Link>
+         ))}
+       </div>
+     </section>
+diff --git a/app/lessons/[slug]/questions/page.tsx b/app/lessons/[slug]/questions/page.tsx
+index dceec64..18b3b38 100644
+--- a/app/lessons/[slug]/questions/page.tsx
++++ b/app/lessons/[slug]/questions/page.tsx
+@@ -1,24 +1,6 @@
+-import Link from "next/link";
+-import { notFound } from "next/navigation";
+-import { getLesson } from "@/lib/data";
+-import QuestionLab from "@/components/question-lab";
++import { redirect } from "next/navigation";
+ 
+-export default async function QuestionsPage({ params }: { params: Promise<{ slug: string }> }) {
++export default async function LegacyQuestionsPage({ params }: { params: Promise<{ slug: string }> }) {
+   const { slug } = await params;
+-  const lesson = getLesson(slug);
+-  if (!lesson) notFound();
+-
+-  return (
+-    <section className="shell section">
+-      <div className="breadcrumb">
+-        <Link href={`/lessons/${slug}`}>{lesson.title}</Link><span>/</span><span>سؤال‌های آموزشی</span>
+-      </div>
+-      <div className="sectionHeading">
+-        <span className="eyebrow">بدون پیش‌نیاز</span>
+-        <h1>سؤال‌های آموزشی — {lesson.title}</h1>
+-        <p>لازم نیست قبلاً درسنامه را خوانده باشی. پاسخ‌ها همان لحظه بررسی می‌شوند.</p>
+-      </div>
+-      <QuestionLab lesson={lesson} />
+-    </section>
+-  );
++  redirect(`/lessons/${slug}`);
+ }
+diff --git a/app/lessons/[slug]/teach/page.tsx b/app/lessons/[slug]/teach/page.tsx
+index 931c316..d99ebd0 100644
+--- a/app/lessons/[slug]/teach/page.tsx
++++ b/app/lessons/[slug]/teach/page.tsx
+@@ -1,121 +1,6 @@
+-import Link from "next/link";
+-import { notFound } from "next/navigation";
+-import { getLesson, type NoteKind } from "@/lib/data";
++import { redirect } from "next/navigation";
+ 
+-const labels: Record<NoteKind, string> = {
+-  meaning: "معنی",
+-  concept: "مفهوم",
+-  vocabulary: "واژه",
+-  literary: "ادبی",
+-  grammar: "زبانی",
+-  exam: "امتحانی",
+-  spelling: "املا"
+-};
+-
+-export default async function TeachPage({ params }: { params: Promise<{ slug: string }> }) {
++export default async function LegacyTeachPage({ params }: { params: Promise<{ slug: string }> }) {
+   const { slug } = await params;
+-  const lesson = getLesson(slug);
+-  if (!lesson) notFound();
+-
+-  return (
+-    <section className="shell section teachingPage">
+-      <div className="breadcrumb">
+-        <Link href={`/lessons/${slug}`}>{lesson.title}</Link>
+-        <span>/</span>
+-        <span>تدریس</span>
+-      </div>
+-
+-      <div className="teachingHeader">
+-        <div>
+-          <span className="eyebrow">{lesson.textTypeLabel}</span>
+-          <h1>{lesson.title}</h1>
+-          <p>
+-            {lesson.textType === "poetry"
+-              ? "هر بیت را جداگانه بخوان و توضیح‌های دقیقاً مربوط به همان بیت را زیرش ببین."
+-              : "هر یک یا دو پاراگراف یک بخش مستقل است و توضیح‌های همان قسمت درست زیر متن آمده‌اند."}
+-          </p>
+-        </div>
+-        <Link className="button secondary" href={`/lessons/${slug}/questions`}>رفتن مستقیم به سؤال‌ها</Link>
+-      </div>
+-
+-      <article className="introCard">
+-        <div className="introTop">
+-          <span className="panelTag">مقدمه درس</span>
+-          <div className="introFacts">
+-            <span><b>پدیدآورنده:</b> {lesson.intro.author}</span>
+-            <span><b>قالب / نوع متن:</b> {lesson.intro.format}</span>
+-          </div>
+-        </div>
+-        <ul className="noteList">
+-          {lesson.intro.notes.map((note) => <li key={note}>{note}</li>)}
+-        </ul>
+-      </article>
+-
+-      <div className="readingTimeline">
+-        {lesson.teachingUnits.map((unit, index) => (
+-          <article className="readingUnit" key={unit.id} id={unit.id}>
+-            <aside className="unitRail">
+-              <span className="unitNumber">{index + 1}</span>
+-              <span className="railLine"></span>
+-            </aside>
+-
+-            <div className="unitBody">
+-              <div className="unitLabel">{unit.label}</div>
+-
+-              <div className={`sourceText ${lesson.textType === "poetry" ? "poetryText" : "proseText"}`}>
+-                {unit.text.map((line, i) =>
+-                  lesson.textType === "poetry"
+-                    ? <p key={i}>{line}</p>
+-                    : <p key={i}>{line}</p>
+-                )}
+-              </div>
+-
+-              <div className="unitNotes">
+-                {unit.notes.map((note, i) => (
+-                  <div className={`noteCard note-${note.kind}`} key={`${unit.id}-${i}`}>
+-                    <div className="noteHead">
+-                      <span className="noteKind">{labels[note.kind]}</span>
+-                      <h3>{note.title}</h3>
+-                    </div>
+-                    <p>{note.text}</p>
+-                  </div>
+-                ))}
+-              </div>
+-            </div>
+-          </article>
+-        ))}
+-      </div>
+-
+-      <div className="topicDivider">
+-        <div>
+-          <span className="eyebrow">مطالعه موضوعی</span>
+-          <h2>بعد از متن درس</h2>
+-          <p>واژه‌نامه، املا، آرایه، دستور و قلمروها در مرحله بعد از همین داده‌ها ساخته می‌شوند.</p>
+-        </div>
+-      </div>
+-
+-      {lesson.vocabulary.length > 0 && (
+-        <article className="contentPanel" id="vocabulary">
+-          <div className="panelHeading">
+-            <span className="panelTag">واژه‌نامه</span>
+-            <h2>واژه در بافت</h2>
+-          </div>
+-          <div className="vocabList">
+-            {lesson.vocabulary.map((item) => (
+-              <div className="vocabCard" key={item.word}>
+-                <div className="word">{item.word}</div>
+-                <blockquote>{item.quote}</blockquote>
+-                <p><b>معنی در این بافت:</b> {item.meaning}</p>
+-                {item.note && <p className="softNote"><b>نکته:</b> {item.note}</p>}
+-              </div>
+-            ))}
+-          </div>
+-        </article>
+-      )}
+-
+-      <div className="bottomAction">
+-        <Link className="button primary" href={`/lessons/${slug}/questions`}>حالا برو سراغ سؤال‌های این درس</Link>
+-      </div>
+-    </section>
+-  );
++  redirect(`/lessons/${slug}/section/meaning`);
+ }
+diff --git a/app/lessons/page.tsx b/app/lessons/page.tsx
+index a65b5fb..59510a0 100644
+--- a/app/lessons/page.tsx
++++ b/app/lessons/page.tsx
+@@ -7,21 +7,19 @@ export default function LessonsPage() {
+       <div className="sectionHeading">
+         <span className="eyebrow">درس‌به‌درس</span>
+         <h1>درس موردنظر را انتخاب کن</h1>
+-        <p>نوع متن هر درس مشخص است و شیوه نمایش تدریس با شعر یا نثر تطبیق پیدا می‌کند.</p>
++        <p>بعد از ورود به هر درس، مستقیماً یکی از بخش‌های حفظیات، معنی و مفهوم، آرایه، دستور، قلمرو، امتحان نهایی یا جمع‌بندی را انتخاب کن.</p>
+       </div>
+       <div className="lessonGrid">
+-        {lessons.map((lesson) => (
+-          <article className="lessonCard" key={lesson.slug}>
+-            <div className="lessonCardTop">
+-              <span className="lessonType">{lesson.textTypeLabel}</span>
+-              <span className="dot">•</span>
+-              <span>{lesson.teachingUnits.length} پارت آموزشی</span>
+-            </div>
+-            <h2>{lesson.title}</h2>
+-            <p>{lesson.subtitle}</p>
+-            <Link className="button primary full" href={`/lessons/${lesson.slug}`}>ورود به درس</Link>
+-          </article>
+-        ))}
++        {lessons.map((lesson) => {
++          const contentCount = lesson.meaningUnits.length + lesson.literaryUnits.length + lesson.grammarUnits.length;
++          return (
++            <article className="lessonCard" key={lesson.slug}>
++              <div className="lessonCardTop"><span className="lessonType">{lesson.textTypeLabel}</span><span className="dot">•</span><span>{contentCount} پارت درسنامه</span><span className="dot">•</span><span>{lesson.questions.length} سؤال</span></div>
++              <h2>{lesson.title}</h2><p>{lesson.subtitle}</p>
++              <Link className="button primary full" href={`/lessons/${lesson.slug}`}>ورود به درس</Link>
++            </article>
++          );
++        })}
+       </div>
+     </section>
+   );
+diff --git a/app/page.tsx b/app/page.tsx
+index 3071b9c..3184420 100644
+--- a/app/page.tsx
++++ b/app/page.tsx
+@@ -7,67 +7,25 @@ export default function HomePage() {
+         <div className="heroNoise" aria-hidden="true" />
+         <div className="shell heroGrid">
+           <div className="heroCopy">
+-            <span className="heroBadge">ادبیات فارسی، ساده‌تر و دقیق‌تر</span>
+-            <h1>هر درس را بخوان، تحلیل کن یا مستقیم برو سراغ سؤال‌ها.</h1>
+-            <p className="lead">
+-              متن درس بخش‌بندی می‌شود؛ در شعر، بیت‌به‌بیت و در نثر، پاراگراف‌به‌پاراگراف.
+-              توضیح هر بخش درست زیر همان متن قرار می‌گیرد.
+-            </p>
+-            <div className="heroHighlights">
+-              <span>تدریس بخش‌به‌بخش</span>
+-              <span>تصحیح لحظه‌ای</span>
+-              <span>مرور هدفمند</span>
+-            </div>
+-            <div className="actions">
+-              <Link className="button primary" href="/lessons">مشاهده درس‌ها</Link>
+-              <Link className="button secondary" href="/review">جمع‌بندی و مرور</Link>
+-            </div>
++            <span className="heroBadge">ادبیات فارسی، بخش‌بندی‌شده و هدفمند</span>
++            <h1>از همان بخشی شروع کن که الان به آن نیاز داری.</h1>
++            <p className="lead">هر درس به حفظیات، معنی و مفهوم، آرایه، دستور، قلمروها، بخش تکمیلی، امتحان نهایی و جمع‌بندی تقسیم می‌شود؛ هیچ مسیر اجباری وجود ندارد.</p>
++            <div className="heroHighlights"><span>درسنامه موضوعی</span><span>تمرین تعاملی</span><span>سؤالات نهایی با تگ</span></div>
++            <div className="actions"><Link className="button primary" href="/lessons">مشاهده درس‌ها</Link><Link className="button secondary" href="/review">جمع‌بندی و مرور</Link></div>
+           </div>
+-
+-          <div className="heroVisual" aria-label="نمونه ساختار یک بخش آموزشی">
+-            <div className="posterGlow" />
+-            <div className="visualOrbit visualOrbitOne" />
+-            <div className="visualOrbit visualOrbitTwo" />
+-            <div className="heroCard">
+-              <span className="heroCardKicker">نمونه مسیر مطالعه</span>
+-              <div className="bookPreview">
+-                <span>بیت / پاراگراف</span>
+-                <strong>متن اصلی درس</strong>
+-                <div className="previewLine" />
+-                <div className="previewLine short" />
+-                <div className="previewNotes">
+-                  <i>معنی</i><i>مفهوم</i><i>آرایه</i>
+-                </div>
+-              </div>
+-              <p className="heroCardText">هر نکته دقیقاً کنار همان بخشی می‌آید که به آن مربوط است.</p>
+-            </div>
+-            <span className="floatingChip floatingChipTop">واژه + مفهوم</span>
+-            <span className="floatingChip floatingChipBottom">تمرین آموزشی</span>
++          <div className="heroVisual" aria-label="ساختار بخش‌های درس">
++            <div className="posterGlow" /><div className="visualOrbit visualOrbitOne" /><div className="visualOrbit visualOrbitTwo" />
++            <div className="heroCard"><span className="heroCardKicker">داخل هر درس</span><div className="bookPreview"><span>انتخاب آزادانه</span><strong>آرایه‌های ادبی</strong><div className="previewLine" /><div className="previewLine short" /><div className="previewNotes"><i>درسنامه</i><i>تشخیص</i><i>سؤال</i></div></div><p className="heroCardText">هر بخش، آموزش و تمرین خودش را دارد.</p></div>
++            <span className="floatingChip floatingChipTop">۸ بخش مستقل</span><span className="floatingChip floatingChipBottom">تگ‌گذاری سؤال‌ها</span>
+           </div>
+         </div>
+       </section>
+ 
+       <section className="shell section">
+-        <div className="sectionHeading centeredHeading">
+-          <span className="eyebrow">ساختار اصلی سایت</span>
+-          <h2>دو مسیر مستقل برای دو نوع نیاز</h2>
+-          <p>اگر درس را بلدی مستقیم تمرین کن؛ اگر نه، آموزش را مرحله‌به‌مرحله جلو برو.</p>
+-        </div>
++        <div className="sectionHeading centeredHeading"><span className="eyebrow">ساختار جدید</span><h2>یک درس، چند مسیر مستقل</h2><p>دانش‌آموز می‌تواند مستقیماً وارد واژگان، آرایه، دستور یا سؤال‌های نهایی شود.</p></div>
+         <div className="twoCol">
+-          <article className="featureCard featureCardTeach">
+-            <div className="iconBox">متن</div>
+-            <span className="featureKicker">مسیر مطالعه</span>
+-            <h3>تدریس بخش‌به‌بخش</h3>
+-            <p>برای شعر، هر بیت یک پارت؛ برای نثر، هر یک یا دو پاراگراف یک پارت.</p>
+-            <Link href="/lessons">ورود به درس‌ها ←</Link>
+-          </article>
+-          <article className="featureCard featureCardQuiz">
+-            <div className="iconBox">سؤال</div>
+-            <span className="featureKicker">مسیر تمرین</span>
+-            <h3>تمرین بدون پیش‌نیاز</h3>
+-            <p>دانش‌آموز حتی بدون خواندن درسنامه مستقیماً وارد سؤال‌ها می‌شود.</p>
+-            <Link href="/lessons/lesson-1/questions">دیدن نمونه سؤال ←</Link>
+-          </article>
++          <article className="featureCard featureCardTeach"><div className="iconBox">۸</div><span className="featureKicker">موضوع‌بندی</span><h3>هر مبحث یک بخش مستقل</h3><p>حفظیات، معنی و مفهوم، آرایه، دستور، قلمرو، روان‌خوانی، امتحان نهایی و جمع‌بندی.</p><Link href="/lessons">مشاهده ساختار درس‌ها ←</Link></article>
++          <article className="featureCard featureCardQuiz"><div className="iconBox">#</div><span className="featureKicker">تگ سؤال</span><h3>یک سؤال، چند کاربرد</h3><p>سؤال نهایی با تگ «آرایه» هم در امتحان نهایی دیده می‌شود و هم در بخش آرایه.</p><Link href="/lessons/lesson-1/section/final">نمونه سؤالات نهایی ←</Link></article>
+         </div>
+       </section>
+     </>
+diff --git a/components/admin-studio.tsx b/components/admin-studio.tsx
+index d98ca36..0f90dba 100644
+--- a/components/admin-studio.tsx
++++ b/components/admin-studio.tsx
+@@ -1,9 +1,20 @@
+ "use client";
+ 
+ import { ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+-import { lessons as seedLessons, type Lesson, type NoteKind, type TeachingNote } from "@/lib/data";
++import {
++  lessons as seedLessons,
++  type Lesson,
++  type NoteKind,
++  type TeachingNote,
++  type TeachingUnit,
++  type TaggedQuestion,
++  type LiteraryPracticeItem
++} from "@/lib/data";
+ 
+-const STORAGE_KEY = "adabiatyar-admin-content-v1";
++const STORAGE_KEY = "adabiatyar-admin-content-v2";
++const LEGACY_STORAGE_KEY = "adabiatyar-admin-content-v1";
++
++type MainTab = "general" | "memorization" | "meaning" | "literary" | "grammar" | "domains" | "reading" | "final" | "summary";
+ 
+ const noteKinds: { value: NoteKind; label: string }[] = [
+   { value: "meaning", label: "معنی" },
+@@ -17,6 +28,10 @@ const noteKinds: { value: NoteKind; label: string }[] = [
+ 
+ const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
+ 
++function blankDomain() {
++  return { normal: [] as TeachingUnit[], advanced: [] as TeachingUnit[] };
++}
++
+ function createLesson(index: number): Lesson {
+   return {
+     slug: `lesson-${index + 1}`,
+@@ -24,25 +39,72 @@ function createLesson(index: number): Lesson {
+     subtitle: "عنوان یا توضیح کوتاه درس",
+     textType: "prose",
+     textTypeLabel: "نثر",
+-    intro: {
+-      author: "",
+-      format: "",
+-      notes: []
+-    },
+-    teachingUnits: [],
+-    parts: [
+-      { id: "vocabulary", title: "واژه‌نامه", description: "آموزش و تمرین واژگان." },
+-      { id: "spelling", title: "املا", description: "نکات املایی." },
+-      { id: "meaning", title: "معنی و مفهوم", description: "معنی و مفهوم متن." },
+-      { id: "literary", title: "آرایه‌های ادبی", description: "آرایه‌ها و دام‌ها." },
+-      { id: "grammar", title: "دستور زبان", description: "نکات دستوری." },
+-      { id: "domains", title: "قلمروها", description: "قلمرو زبانی، ادبی و فکری." }
+-    ],
++    intro: { author: "", format: "", notes: [] },
+     vocabulary: [],
++    spelling: [],
++    meaningUnits: [],
++    literaryUnits: [],
++    literaryPractice: [],
++    grammarUnits: [],
++    domains: { thinking: blankDomain(), literary: blankDomain(), language: blankDomain() },
++    reading: { kind: "ندارد", units: [] },
++    summaryUnits: [],
+     questions: []
+   };
+ }
+ 
++function migrateQuestion(q: any, index: number): TaggedQuestion {
++  const anchor = q.lessonAnchor ?? "meaning";
++  const tags = Array.isArray(q.tags) && q.tags.length
++    ? q.tags
++    : anchor === "vocabulary" ? ["واژه", "حفظیات"]
++      : anchor === "literary" ? ["آرایه"]
++        : anchor === "grammar" ? ["دستور زبان"]
++          : ["معنی و مفهوم"];
++  return {
++    id: q.id ?? `q-${Date.now()}-${index}`,
++    prompt: q.prompt ?? "",
++    options: Array.isArray(q.options) && q.options.length ? q.options : ["", "", "", ""],
++    answer: Number.isInteger(q.answer) ? q.answer : 0,
++    explanation: q.explanation ?? "",
++    lessonHint: q.lessonHint ?? "",
++    lessonAnchor: anchor,
++    tags,
++    sourceType: q.sourceType === "final" ? "final" : "authored",
++    examPeriod: q.examPeriod ?? ""
++  };
++}
++
++function migrateLesson(raw: any, index: number): Lesson {
++  if (raw?.meaningUnits && raw?.domains && raw?.reading) {
++    return {
++      ...createLesson(index),
++      ...raw,
++      questions: (raw.questions ?? []).map(migrateQuestion),
++      domains: {
++        thinking: { ...blankDomain(), ...(raw.domains?.thinking ?? {}) },
++        literary: { ...blankDomain(), ...(raw.domains?.literary ?? {}) },
++        language: { ...blankDomain(), ...(raw.domains?.language ?? {}) }
++      },
++      reading: { kind: raw.reading?.kind ?? "ندارد", units: raw.reading?.units ?? [] }
++    };
++  }
++
++  const fallback = createLesson(index);
++  return {
++    ...fallback,
++    slug: raw?.slug ?? fallback.slug,
++    title: raw?.title ?? fallback.title,
++    subtitle: raw?.subtitle ?? fallback.subtitle,
++    textType: raw?.textType ?? "prose",
++    textTypeLabel: raw?.textTypeLabel ?? "نثر",
++    intro: raw?.intro ?? fallback.intro,
++    vocabulary: raw?.vocabulary ?? [],
++    meaningUnits: raw?.teachingUnits ?? [],
++    questions: (raw?.questions ?? []).map(migrateQuestion)
++  };
++}
++
+ function downloadJson(data: Lesson[]) {
+   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+   const url = URL.createObjectURL(blob);
+@@ -58,36 +120,42 @@ function downloadJson(data: Lesson[]) {
+ export default function AdminStudio() {
+   const [lessons, setLessons] = useState<Lesson[]>(clone(seedLessons));
+   const [selectedSlug, setSelectedSlug] = useState(seedLessons[0]?.slug ?? "");
+-  const [tab, setTab] = useState<"general" | "units" | "vocab" | "questions">("general");
++  const [tab, setTab] = useState<MainTab>("general");
++  const [subTab, setSubTab] = useState("lesson");
+   const [savedLabel, setSavedLabel] = useState("ذخیره نشده");
+   const [dirty, setDirty] = useState(false);
+   const importRef = useRef<HTMLInputElement>(null);
+ 
+   useEffect(() => {
+-    const raw = localStorage.getItem(STORAGE_KEY);
++    const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
+     if (!raw) return;
+     try {
+-      const parsed = JSON.parse(raw) as Lesson[];
++      const parsed = JSON.parse(raw);
+       if (Array.isArray(parsed) && parsed.length > 0) {
+-        setLessons(parsed);
+-        setSelectedSlug(parsed[0].slug);
++        const migrated = parsed.map(migrateLesson);
++        setLessons(migrated);
++        setSelectedSlug(migrated[0].slug);
+         setSavedLabel("نسخه ذخیره‌شده مرورگر بارگذاری شد");
+       }
+     } catch {
+-      setSavedLabel("فایل ذخیره‌شده قابل خواندن نبود");
++      setSavedLabel("نسخه ذخیره‌شده قابل خواندن نبود");
+     }
+   }, []);
+ 
+-  const selectedIndex = lessons.findIndex((lesson) => lesson.slug === selectedSlug);
+-  const lesson = selectedIndex >= 0 ? lessons[selectedIndex] : lessons[0];
++  const lesson = lessons.find((item) => item.slug === selectedSlug) ?? lessons[0];
+ 
+   const stats = useMemo(() => {
+-    if (!lesson) return { units: 0, notes: 0, vocab: 0, questions: 0 };
++    if (!lesson) return { content: 0, vocab: 0, questions: 0, tags: 0 };
++    const content = lesson.meaningUnits.length + lesson.literaryUnits.length + lesson.grammarUnits.length +
++      lesson.domains.thinking.normal.length + lesson.domains.thinking.advanced.length +
++      lesson.domains.literary.normal.length + lesson.domains.literary.advanced.length +
++      lesson.domains.language.normal.length + lesson.domains.language.advanced.length +
++      lesson.reading.units.length + lesson.summaryUnits.length;
+     return {
+-      units: lesson.teachingUnits.length,
+-      notes: lesson.teachingUnits.reduce((sum, unit) => sum + unit.notes.length, 0),
++      content,
+       vocab: lesson.vocabulary.length,
+-      questions: lesson.questions.length
++      questions: lesson.questions.length,
++      tags: new Set(lesson.questions.flatMap((q) => q.tags)).size
+     };
+   }, [lesson]);
+ 
+@@ -105,13 +173,14 @@ export default function AdminStudio() {
+ 
+   function saveLocal() {
+     localStorage.setItem(STORAGE_KEY, JSON.stringify(lessons));
++    localStorage.removeItem(LEGACY_STORAGE_KEY);
+     setDirty(false);
+     setSavedLabel(`ذخیره شد — ${new Date().toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" })}`);
+   }
+ 
+   function addLesson() {
+-    const next = createLesson(lessons.length);
+     let suffix = lessons.length + 1;
++    const next = createLesson(suffix - 1);
+     while (lessons.some((item) => item.slug === next.slug)) {
+       suffix += 1;
+       next.slug = `lesson-${suffix}`;
+@@ -135,8 +204,9 @@ export default function AdminStudio() {
+   }
+ 
+   function resetAll() {
+-    if (!window.confirm("همه تغییرات این مرورگر پاک و محتوای نمونه اولیه برگردانده شود؟")) return;
++    if (!window.confirm("همه تغییرات مرورگر پاک و محتوای نمونه اولیه برگردانده شود؟")) return;
+     localStorage.removeItem(STORAGE_KEY);
++    localStorage.removeItem(LEGACY_STORAGE_KEY);
+     const next = clone(seedLessons);
+     setLessons(next);
+     setSelectedSlug(next[0]?.slug ?? "");
+@@ -148,12 +218,13 @@ export default function AdminStudio() {
+     const file = event.target.files?.[0];
+     if (!file) return;
+     try {
+-      const parsed = JSON.parse(await file.text()) as Lesson[];
+-      if (!Array.isArray(parsed) || parsed.length === 0 || !parsed[0]?.slug) throw new Error();
+-      setLessons(parsed);
+-      setSelectedSlug(parsed[0].slug);
++      const parsed = JSON.parse(await file.text());
++      if (!Array.isArray(parsed) || parsed.length === 0) throw new Error();
++      const migrated = parsed.map(migrateLesson);
++      setLessons(migrated);
++      setSelectedSlug(migrated[0].slug);
+       setDirty(true);
+-      setSavedLabel("فایل وارد شد؛ برای ماندگار شدن ذخیره کن");
++      setSavedLabel("فایل وارد و به ساختار جدید تبدیل شد؛ ذخیره کن");
+     } catch {
+       window.alert("ساختار فایل JSON معتبر نیست.");
+     } finally {
+@@ -163,30 +234,32 @@ export default function AdminStudio() {
+ 
+   if (!lesson) return null;
+ 
++  const tabs: { key: MainTab; label: string }[] = [
++    { key: "general", label: "اطلاعات درس" },
++    { key: "memorization", label: "حفظیات" },
++    { key: "meaning", label: "معنی و مفهوم" },
++    { key: "literary", label: "آرایه" },
++    { key: "grammar", label: "دستور" },
++    { key: "domains", label: "قلمرو" },
++    { key: "reading", label: "روان‌خوانی" },
++    { key: "final", label: "امتحان نهایی" },
++    { key: "summary", label: "جمع‌بندی" }
++  ];
++
+   return (
+-    <div className="adminStudio">
++    <div className="adminStudio adminStudioV2">
+       <aside className="adminSidebar">
+         <div className="adminSidebarTop">
+-          <div>
+-            <span className="adminSmallLabel">درس‌ها</span>
+-            <strong>{lessons.length} درس</strong>
+-          </div>
++          <div><span className="adminSmallLabel">درس‌ها</span><strong>{lessons.length} درس</strong></div>
+           <button className="adminIconButton" onClick={addLesson} title="افزودن درس">+</button>
+         </div>
+-
+         <div className="adminLessonList">
+           {lessons.map((item) => (
+-            <button
+-              key={item.slug}
+-              className={`adminLessonItem ${item.slug === lesson.slug ? "active" : ""}`}
+-              onClick={() => setSelectedSlug(item.slug)}
+-            >
+-              <span>{item.title}</span>
+-              <small>{item.textTypeLabel}</small>
++            <button key={item.slug} className={`adminLessonItem ${item.slug === lesson.slug ? "active" : ""}`} onClick={() => setSelectedSlug(item.slug)}>
++              <span>{item.title}</span><small>{item.textTypeLabel}</small>
+             </button>
+           ))}
+         </div>
+-
+         <div className="adminSidebarActions">
+           <button onClick={() => importRef.current?.click()}>ورود فایل JSON</button>
+           <button onClick={() => downloadJson(lessons)}>خروجی / بکاپ JSON</button>
+@@ -197,10 +270,7 @@ export default function AdminStudio() {
+ 
+       <div className="adminWorkspace">
+         <div className="adminToolbar">
+-          <div>
+-            <span className="adminSmallLabel">در حال ویرایش</span>
+-            <h2>{lesson.title}</h2>
+-          </div>
++          <div><span className="adminSmallLabel">در حال ویرایش</span><h2>{lesson.title}</h2></div>
+           <div className="adminSaveArea">
+             <span className={dirty ? "saveStatus dirty" : "saveStatus"}>{savedLabel}</span>
+             <button className="button secondary" disabled={lessons.length <= 1} onClick={deleteLesson}>حذف درس</button>
+@@ -209,173 +279,164 @@ export default function AdminStudio() {
+         </div>
+ 
+         <div className="adminStats">
+-          <div><strong>{stats.units}</strong><span>پارت تدریس</span></div>
+-          <div><strong>{stats.notes}</strong><span>توضیح آموزشی</span></div>
++          <div><strong>{stats.content}</strong><span>پارت محتوایی</span></div>
+           <div><strong>{stats.vocab}</strong><span>واژه</span></div>
+           <div><strong>{stats.questions}</strong><span>سؤال</span></div>
++          <div><strong>{stats.tags}</strong><span>تگ سؤال</span></div>
+         </div>
+ 
+-        <div className="adminTabs">
+-          <button className={tab === "general" ? "active" : ""} onClick={() => setTab("general")}>اطلاعات درس</button>
+-          <button className={tab === "units" ? "active" : ""} onClick={() => setTab("units")}>متن و پارت‌ها</button>
+-          <button className={tab === "vocab" ? "active" : ""} onClick={() => setTab("vocab")}>واژه‌نامه</button>
+-          <button className={tab === "questions" ? "active" : ""} onClick={() => setTab("questions")}>سؤال‌ها</button>
++        <div className="adminTabs majorAdminTabs">
++          {tabs.map((item) => <button key={item.key} className={tab === item.key ? "active" : ""} onClick={() => { setTab(item.key); setSubTab("lesson"); }}>{item.label}</button>)}
+         </div>
+ 
+-        {tab === "general" && (
++        {tab === "general" && <GeneralEditor lesson={lesson} mutate={mutateCurrent} setLessons={setLessons} setSelectedSlug={setSelectedSlug} setDirty={setDirty} setSavedLabel={setSavedLabel} />}
++
++        {tab === "memorization" && (
+           <div className="adminPanel">
+-            <div className="adminPanelHeading">
+-              <div><span className="adminSmallLabel">مشخصات پایه</span><h3>اطلاعات اصلی درس</h3></div>
+-            </div>
+-            <div className="formGrid two">
+-              <label><span>عنوان درس</span><input value={lesson.title} onChange={(e) => mutateCurrent((d) => { d.title = e.target.value; })} /></label>
+-              <label><span>شناسه لینک (slug)</span><input dir="ltr" value={lesson.slug} onChange={(e) => {
+-                const oldSlug = lesson.slug;
+-                const newSlug = e.target.value.trim().replace(/\s+/g, "-");
+-                setLessons((current) => current.map((item) => item.slug === oldSlug ? { ...item, slug: newSlug } : item));
+-                setSelectedSlug(newSlug);
+-                setDirty(true);
+-                setSavedLabel("تغییرات ذخیره نشده");
+-              }} /></label>
+-              <label className="fullSpan"><span>توضیح کوتاه</span><input value={lesson.subtitle} onChange={(e) => mutateCurrent((d) => { d.subtitle = e.target.value; })} /></label>
+-              <label><span>نوع درس</span><select value={lesson.textType} onChange={(e) => mutateCurrent((d) => {
+-                d.textType = e.target.value as Lesson["textType"];
+-                d.textTypeLabel = e.target.value === "poetry" ? "نظم / شعر" : e.target.value === "prose" ? "نثر" : "ترکیبی";
+-              })}><option value="poetry">نظم / شعر</option><option value="prose">نثر</option><option value="mixed">ترکیبی</option></select></label>
+-              <label><span>شاعر / نویسنده</span><input value={lesson.intro.author} onChange={(e) => mutateCurrent((d) => { d.intro.author = e.target.value; })} /></label>
+-              <label><span>قالب / نوع متن</span><input value={lesson.intro.format} onChange={(e) => mutateCurrent((d) => { d.intro.format = e.target.value; })} /></label>
+-            </div>
++            <SubTabs value={subTab} onChange={setSubTab} items={[{ key: "lesson", label: "مقدمه" }, { key: "vocab", label: "واژه‌نامه" }, { key: "leitner", label: "جعبه لایتنر" }, { key: "spelling", label: "املا" }]} />
++            {subTab === "lesson" && <IntroNotesEditor lesson={lesson} mutate={mutateCurrent} />}
++            {subTab === "vocab" && <VocabularyEditor lesson={lesson} mutate={mutateCurrent} />}
++            {subTab === "leitner" && <div className="adminInfoBox">جعبه لایتنر از همان واژه‌های «واژه‌نامه» ساخته می‌شود؛ محتوا را دوباره وارد نکن. دانش‌آموز وضعیت «بلد بودم / شک داشتم / بلد نبودم» را در بخش کاربری ثبت می‌کند.</div>}
++            {subTab === "spelling" && <SpellingEditor lesson={lesson} mutate={mutateCurrent} />}
++          </div>
++        )}
+ 
+-            <div className="adminSubsection">
+-              <div className="adminSubsectionHeader"><h4>نکات مقدمه</h4><button className="smallButton" onClick={() => mutateCurrent((d) => d.intro.notes.push(""))}>+ افزودن نکته</button></div>
+-              {lesson.intro.notes.length === 0 && <div className="adminEmpty">هنوز نکته‌ای برای مقدمه وارد نشده است.</div>}
+-              {lesson.intro.notes.map((note, index) => (
+-                <div className="inlineEditor" key={index}>
+-                  <input value={note} placeholder="مثلاً: این درس غزل است و ..." onChange={(e) => mutateCurrent((d) => { d.intro.notes[index] = e.target.value; })} />
+-                  <button className="deleteMini" onClick={() => mutateCurrent((d) => { d.intro.notes.splice(index, 1); })}>حذف</button>
+-                </div>
+-              ))}
+-            </div>
++        {tab === "meaning" && (
++          <div className="adminPanel">
++            <SubTabs value={subTab} onChange={setSubTab} items={[{ key: "lesson", label: "درسنامه" }, { key: "questions", label: "سؤالات" }]} />
++            {subTab === "lesson" ? <UnitCollectionEditor title="درسنامه معنی و مفهوم" units={lesson.meaningUnits} textType={lesson.textType} onChange={(units) => mutateCurrent((d) => { d.meaningUnits = units; })} /> : <QuestionEditor questions={lesson.questions} requiredTag="معنی و مفهوم" mutate={mutateCurrent} />}
+           </div>
+         )}
+ 
+-        {tab === "units" && (
++        {tab === "literary" && (
+           <div className="adminPanel">
+-            <div className="adminPanelHeading">
+-              <div>
+-                <span className="adminSmallLabel">{lesson.textType === "poetry" ? "بیت‌به‌بیت" : "پاراگراف‌به‌پاراگراف"}</span>
+-                <h3>متن اصلی و توضیحات هر پارت</h3>
+-                <p>{lesson.textType === "poetry" ? "برای هر بیت یک پارت بساز. هر مصراع را در یک خط بنویس." : "برای هر یک یا دو پاراگراف یک پارت بساز. پاراگراف‌ها را با یک خط خالی از هم جدا کن."}</p>
+-              </div>
+-              <button className="button primary" onClick={() => mutateCurrent((d) => d.teachingUnits.push({ id: `part-${Date.now()}`, label: lesson.textType === "poetry" ? `بیت ${d.teachingUnits.length + 1}` : `بخش ${d.teachingUnits.length + 1}`, text: [""], notes: [] }))}>+ افزودن پارت</button>
+-            </div>
++            <SubTabs value={subTab} onChange={setSubTab} items={[{ key: "lesson", label: "درسنامه" }, { key: "practice", label: "تمرین تشخیص آرایه" }, { key: "questions", label: "سؤالات" }]} />
++            {subTab === "lesson" && <UnitCollectionEditor title="درسنامه آرایه‌های ادبی" units={lesson.literaryUnits} textType={lesson.textType} onChange={(units) => mutateCurrent((d) => { d.literaryUnits = units; })} />}
++            {subTab === "practice" && <LiteraryPracticeEditor items={lesson.literaryPractice} onChange={(items) => mutateCurrent((d) => { d.literaryPractice = items; })} />}
++            {subTab === "questions" && <QuestionEditor questions={lesson.questions} requiredTag="آرایه" mutate={mutateCurrent} />}
++          </div>
++        )}
+ 
+-            {lesson.teachingUnits.length === 0 && <div className="adminEmpty large">هنوز پارت آموزشی ساخته نشده است. «افزودن پارت» را بزن.</div>}
+-
+-            <div className="adminUnitList">
+-              {lesson.teachingUnits.map((unit, unitIndex) => (
+-                <article className="adminUnitCard" key={unit.id}>
+-                  <div className="adminUnitTop">
+-                    <div className="adminUnitNumber">{unitIndex + 1}</div>
+-                    <input className="unitTitleInput" value={unit.label} onChange={(e) => mutateCurrent((d) => { d.teachingUnits[unitIndex].label = e.target.value; })} />
+-                    <div className="reorderButtons">
+-                      <button disabled={unitIndex === 0} onClick={() => mutateCurrent((d) => { const item = d.teachingUnits.splice(unitIndex, 1)[0]; d.teachingUnits.splice(unitIndex - 1, 0, item); })}>↑</button>
+-                      <button disabled={unitIndex === lesson.teachingUnits.length - 1} onClick={() => mutateCurrent((d) => { const item = d.teachingUnits.splice(unitIndex, 1)[0]; d.teachingUnits.splice(unitIndex + 1, 0, item); })}>↓</button>
+-                      <button className="deleteMini" onClick={() => { if (window.confirm("این پارت حذف شود؟")) mutateCurrent((d) => { d.teachingUnits.splice(unitIndex, 1); }); }}>حذف</button>
+-                    </div>
+-                  </div>
+-
+-                  <label className="blockField">
+-                    <span>متن اصلی</span>
+-                    <textarea rows={lesson.textType === "poetry" ? 3 : 6} value={unit.text.join(lesson.textType === "poetry" ? "\n" : "\n\n")} onChange={(e) => mutateCurrent((d) => {
+-                      const separator = lesson.textType === "poetry" ? /\n/ : /\n\s*\n/;
+-                      d.teachingUnits[unitIndex].text = e.target.value.split(separator);
+-                    })} />
+-                  </label>
+-
+-                  <div className="notesEditor">
+-                    <div className="adminSubsectionHeader"><h4>توضیحات این پارت</h4><button className="smallButton" onClick={() => mutateCurrent((d) => d.teachingUnits[unitIndex].notes.push({ kind: "meaning", title: "معنی روان", text: "" }))}>+ افزودن توضیح</button></div>
+-                    {unit.notes.length === 0 && <div className="adminEmpty">برای این پارت هنوز توضیحی ثبت نشده است.</div>}
+-                    {unit.notes.map((note, noteIndex) => (
+-                      <NoteEditor
+-                        key={`${unit.id}-${noteIndex}`}
+-                        note={note}
+-                        onChange={(next) => mutateCurrent((d) => { d.teachingUnits[unitIndex].notes[noteIndex] = next; })}
+-                        onDelete={() => mutateCurrent((d) => { d.teachingUnits[unitIndex].notes.splice(noteIndex, 1); })}
+-                      />
+-                    ))}
+-                  </div>
+-                </article>
+-              ))}
+-            </div>
++        {tab === "grammar" && (
++          <div className="adminPanel">
++            <SubTabs value={subTab} onChange={setSubTab} items={[{ key: "lesson", label: "درسنامه" }, { key: "questions", label: "سؤالات" }]} />
++            {subTab === "lesson" ? <UnitCollectionEditor title="درسنامه دستور زبان" units={lesson.grammarUnits} textType={lesson.textType} onChange={(units) => mutateCurrent((d) => { d.grammarUnits = units; })} /> : <QuestionEditor questions={lesson.questions} requiredTag="دستور زبان" mutate={mutateCurrent} />}
+           </div>
+         )}
+ 
+-        {tab === "vocab" && (
++        {tab === "domains" && <DomainsEditor lesson={lesson} mutate={mutateCurrent} subTab={subTab} setSubTab={setSubTab} />}
++
++        {tab === "reading" && (
+           <div className="adminPanel">
+             <div className="adminPanelHeading">
+-              <div><span className="adminSmallLabel">واژه‌نامه</span><h3>واژه‌ها و فلش‌کارت‌ها</h3><p>همین داده بعداً هم در درسنامه واژه و هم در تمرین فلش‌کارت استفاده می‌شود.</p></div>
+-              <button className="button primary" onClick={() => mutateCurrent((d) => d.vocabulary.push({ word: "", quote: "", meaning: "", note: "" }))}>+ افزودن واژه</button>
+-            </div>
+-            {lesson.vocabulary.length === 0 && <div className="adminEmpty large">هنوز واژه‌ای وارد نشده است.</div>}
+-            <div className="adminCardsGrid">
+-              {lesson.vocabulary.map((item, index) => (
+-                <article className="adminMiniCard" key={index}>
+-                  <div className="adminMiniCardTop"><strong>واژه {index + 1}</strong><button className="deleteMini" onClick={() => mutateCurrent((d) => { d.vocabulary.splice(index, 1); })}>حذف</button></div>
+-                  <label><span>واژه</span><input value={item.word} onChange={(e) => mutateCurrent((d) => { d.vocabulary[index].word = e.target.value; })} /></label>
+-                  <label><span>بیت یا جمله اصلی</span><textarea rows={3} value={item.quote} onChange={(e) => mutateCurrent((d) => { d.vocabulary[index].quote = e.target.value; })} /></label>
+-                  <label><span>معنی در بافت</span><textarea rows={2} value={item.meaning} onChange={(e) => mutateCurrent((d) => { d.vocabulary[index].meaning = e.target.value; })} /></label>
+-                  <label><span>نکته / ایهام / معنی دیگر</span><textarea rows={2} value={item.note ?? ""} onChange={(e) => mutateCurrent((d) => { d.vocabulary[index].note = e.target.value; })} /></label>
+-                </article>
+-              ))}
++              <div><span className="adminSmallLabel">بخش F</span><h3>روان‌خوانی / حکایت / شعرخوانی</h3></div>
++              <label className="inlineSelect"><span>نوع بخش</span><select value={lesson.reading.kind} onChange={(e) => mutateCurrent((d) => { d.reading.kind = e.target.value as Lesson["reading"]["kind"]; })}><option>ندارد</option><option>روان‌خوانی</option><option>حکایت</option><option>شعرخوانی</option><option>شعر حفظی</option></select></label>
+             </div>
++            <UnitCollectionEditor title={lesson.reading.kind} units={lesson.reading.units} textType={lesson.textType} onChange={(units) => mutateCurrent((d) => { d.reading.units = units; })} />
+           </div>
+         )}
+ 
+-        {tab === "questions" && (
++        {tab === "final" && (
+           <div className="adminPanel">
+-            <div className="adminPanelHeading">
+-              <div><span className="adminSmallLabel">سؤال‌های آموزشی</span><h3>سؤال گزینه‌ای و پاسخ لحظه‌ای</h3><p>فعلاً قالب چهارگزینه‌ای است؛ بعداً سؤال نهایی، تألیفی و انواع دیگر را جدا می‌کنیم.</p></div>
+-              <button className="button primary" onClick={() => mutateCurrent((d) => d.questions.push({ id: `q-${Date.now()}`, prompt: "", options: ["", "", "", ""], answer: 0, explanation: "", lessonHint: "", lessonAnchor: "meaning" }))}>+ افزودن سؤال</button>
+-            </div>
+-            {lesson.questions.length === 0 && <div className="adminEmpty large">هنوز سؤالی برای این درس ساخته نشده است.</div>}
+-            <div className="adminUnitList">
+-              {lesson.questions.map((question, index) => (
+-                <article className="adminQuestionEditor" key={question.id}>
+-                  <div className="adminMiniCardTop"><strong>سؤال {index + 1}</strong><button className="deleteMini" onClick={() => mutateCurrent((d) => { d.questions.splice(index, 1); })}>حذف</button></div>
+-                  <label className="blockField"><span>صورت سؤال</span><textarea rows={3} value={question.prompt} onChange={(e) => mutateCurrent((d) => { d.questions[index].prompt = e.target.value; })} /></label>
+-                  <div className="questionOptionsEditor">
+-                    {question.options.map((option, optionIndex) => (
+-                      <label key={optionIndex} className={`questionOptionField ${question.answer === optionIndex ? "correct" : ""}`}>
+-                        <input type="radio" checked={question.answer === optionIndex} onChange={() => mutateCurrent((d) => { d.questions[index].answer = optionIndex; })} />
+-                        <span>گزینه {optionIndex + 1}</span>
+-                        <input value={option} onChange={(e) => mutateCurrent((d) => { d.questions[index].options[optionIndex] = e.target.value; })} />
+-                      </label>
+-                    ))}
+-                  </div>
+-                  <div className="formGrid two compact">
+-                    <label><span>توضیح پاسخ</span><textarea rows={3} value={question.explanation} onChange={(e) => mutateCurrent((d) => { d.questions[index].explanation = e.target.value; })} /></label>
+-                    <label><span>ارجاع آموزشی</span><input placeholder="مثلاً: معنی و مفهوم ← بیت ۳" value={question.lessonHint} onChange={(e) => mutateCurrent((d) => { d.questions[index].lessonHint = e.target.value; })} /></label>
+-                  </div>
+-                </article>
+-              ))}
+-            </div>
++            <div className="adminInfoBox">هر سؤال نهایی فقط یک‌بار ثبت می‌شود. تگ‌های موضوعی مثل «آرایه» یا «معنی و مفهوم» باعث می‌شوند همان سؤال در بخش مربوط هم نمایش داده شود.</div>
++            <QuestionEditor questions={lesson.questions} requiredTag="امتحان نهایی" forceFinal mutate={mutateCurrent} />
+           </div>
+         )}
++
++        {tab === "summary" && (
++          <div className="adminPanel"><UnitCollectionEditor title="جمع‌بندی این درس" units={lesson.summaryUnits} textType={lesson.textType} onChange={(units) => mutateCurrent((d) => { d.summaryUnits = units; })} /></div>
++        )}
+       </div>
+     </div>
+   );
+ }
+ 
+-function NoteEditor({ note, onChange, onDelete }: { note: TeachingNote; onChange: (note: TeachingNote) => void; onDelete: () => void }) {
++function GeneralEditor({ lesson, mutate, setLessons, setSelectedSlug, setDirty, setSavedLabel }: any) {
++  return (
++    <div className="adminPanel">
++      <div className="adminPanelHeading"><div><span className="adminSmallLabel">مشخصات پایه</span><h3>اطلاعات اصلی درس</h3></div></div>
++      <div className="formGrid two">
++        <label><span>عنوان درس</span><input value={lesson.title} onChange={(e) => mutate((d: Lesson) => { d.title = e.target.value; })} /></label>
++        <label><span>شناسه لینک (slug)</span><input dir="ltr" value={lesson.slug} onChange={(e) => {
++          const oldSlug = lesson.slug;
++          const newSlug = e.target.value.trim().replace(/\s+/g, "-");
++          setLessons((current: Lesson[]) => current.map((item) => item.slug === oldSlug ? { ...item, slug: newSlug } : item));
++          setSelectedSlug(newSlug); setDirty(true); setSavedLabel("تغییرات ذخیره نشده");
++        }} /></label>
++        <label className="fullSpan"><span>توضیح کوتاه</span><input value={lesson.subtitle} onChange={(e) => mutate((d: Lesson) => { d.subtitle = e.target.value; })} /></label>
++        <label><span>نوع درس</span><select value={lesson.textType} onChange={(e) => mutate((d: Lesson) => { d.textType = e.target.value as Lesson["textType"]; d.textTypeLabel = e.target.value === "poetry" ? "نظم / شعر" : e.target.value === "prose" ? "نثر" : "ترکیبی"; })}><option value="poetry">نظم / شعر</option><option value="prose">نثر</option><option value="mixed">ترکیبی</option></select></label>
++        <label><span>شاعر / نویسنده</span><input value={lesson.intro.author} onChange={(e) => mutate((d: Lesson) => { d.intro.author = e.target.value; })} /></label>
++        <label><span>قالب / نوع متن</span><input value={lesson.intro.format} onChange={(e) => mutate((d: Lesson) => { d.intro.format = e.target.value; })} /></label>
++      </div>
++    </div>
++  );
++}
++
++function IntroNotesEditor({ lesson, mutate }: { lesson: Lesson; mutate: (fn: (d: Lesson) => void) => void }) {
+   return (
+-    <div className="noteEditorRow">
+-      <select value={note.kind} onChange={(e) => onChange({ ...note, kind: e.target.value as NoteKind })}>
+-        {noteKinds.map((kind) => <option key={kind.value} value={kind.value}>{kind.label}</option>)}
+-      </select>
+-      <input value={note.title} placeholder="عنوان توضیح" onChange={(e) => onChange({ ...note, title: e.target.value })} />
+-      <textarea rows={2} value={note.text} placeholder="توضیح این نکته..." onChange={(e) => onChange({ ...note, text: e.target.value })} />
+-      <button className="deleteMini" onClick={onDelete}>حذف</button>
++    <div className="adminSubsection noTopBorder">
++      <div className="adminSubsectionHeader"><div><h4>مقدمه درس</h4><p>شاعر، قالب و ویژگی‌های کلی در «اطلاعات درس» هستند؛ اینجا نکات مقدمه را اضافه کن.</p></div><button className="smallButton" onClick={() => mutate((d) => d.intro.notes.push(""))}>+ افزودن نکته</button></div>
++      {lesson.intro.notes.map((note, index) => <div className="inlineEditor" key={index}><input value={note} onChange={(e) => mutate((d) => { d.intro.notes[index] = e.target.value; })} /><button className="deleteMini" onClick={() => mutate((d) => { d.intro.notes.splice(index, 1); })}>حذف</button></div>)}
++      {lesson.intro.notes.length === 0 && <div className="adminEmpty">هنوز نکته‌ای برای مقدمه ثبت نشده است.</div>}
+     </div>
+   );
+ }
++
++function VocabularyEditor({ lesson, mutate }: { lesson: Lesson; mutate: (fn: (d: Lesson) => void) => void }) {
++  return (
++    <div>
++      <div className="adminPanelHeading"><div><h3>واژه‌نامه</h3><p>این داده هم در درسنامه واژه و هم در جعبه لایتنر استفاده می‌شود.</p></div><button className="button primary" onClick={() => mutate((d) => d.vocabulary.push({ word: "", quote: "", meaning: "", note: "" }))}>+ افزودن واژه</button></div>
++      <div className="adminCardsGrid">{lesson.vocabulary.map((item, index) => <article className="adminMiniCard" key={index}><div className="adminMiniCardTop"><strong>واژه {index + 1}</strong><button className="deleteMini" onClick={() => mutate((d) => { d.vocabulary.splice(index, 1); })}>حذف</button></div><label><span>واژه</span><input value={item.word} onChange={(e) => mutate((d) => { d.vocabulary[index].word = e.target.value; })} /></label><label><span>بیت / جمله اصلی</span><textarea rows={3} value={item.quote} onChange={(e) => mutate((d) => { d.vocabulary[index].quote = e.target.value; })} /></label><label><span>معنی در بافت</span><textarea rows={2} value={item.meaning} onChange={(e) => mutate((d) => { d.vocabulary[index].meaning = e.target.value; })} /></label><label><span>نکته / ایهام / معنی دیگر</span><textarea rows={2} value={item.note ?? ""} onChange={(e) => mutate((d) => { d.vocabulary[index].note = e.target.value; })} /></label></article>)}</div>
++      {lesson.vocabulary.length === 0 && <div className="adminEmpty large">هنوز واژه‌ای ثبت نشده است.</div>}
++    </div>
++  );
++}
++
++function SpellingEditor({ lesson, mutate }: { lesson: Lesson; mutate: (fn: (d: Lesson) => void) => void }) {
++  return (
++    <div><div className="adminPanelHeading"><div><h3>املا</h3><p>کلمه، جمله اصلی، هم‌آوا و نکته املایی.</p></div><button className="button primary" onClick={() => mutate((d) => d.spelling.push({ word: "", quote: "", homophone: "", note: "" }))}>+ افزودن کلمه املایی</button></div><div className="adminCardsGrid">{lesson.spelling.map((item, index) => <article className="adminMiniCard" key={index}><div className="adminMiniCardTop"><strong>مورد {index + 1}</strong><button className="deleteMini" onClick={() => mutate((d) => { d.spelling.splice(index, 1); })}>حذف</button></div><label><span>کلمه</span><input value={item.word} onChange={(e) => mutate((d) => { d.spelling[index].word = e.target.value; })} /></label><label><span>بیت / جمله</span><textarea rows={2} value={item.quote} onChange={(e) => mutate((d) => { d.spelling[index].quote = e.target.value; })} /></label><label><span>هم‌آوا / مشابه</span><input value={item.homophone ?? ""} onChange={(e) => mutate((d) => { d.spelling[index].homophone = e.target.value; })} /></label><label><span>نکته</span><textarea rows={2} value={item.note ?? ""} onChange={(e) => mutate((d) => { d.spelling[index].note = e.target.value; })} /></label></article>)}</div>{lesson.spelling.length === 0 && <div className="adminEmpty large">هنوز مورد املایی ثبت نشده است.</div>}</div>
++  );
++}
++
++function UnitCollectionEditor({ title, units, textType, onChange }: { title: string; units: TeachingUnit[]; textType: Lesson["textType"]; onChange: (units: TeachingUnit[]) => void }) {
++  const update = (fn: (draft: TeachingUnit[]) => void) => { const next = clone(units); fn(next); onChange(next); };
++  return (
++    <div>
++      <div className="adminPanelHeading"><div><h3>{title || "محتوا"}</h3><p>{textType === "poetry" ? "هر بیت یا بخش مرتبط را جداگانه وارد کن." : "هر یک یا دو پاراگراف مرتبط را یک پارت در نظر بگیر."}</p></div><button className="button primary" onClick={() => update((d) => d.push({ id: `unit-${Date.now()}`, label: `بخش ${d.length + 1}`, text: [""], notes: [] }))}>+ افزودن پارت</button></div>
++      <div className="adminUnitList">{units.map((unit, unitIndex) => <article className="adminUnitCard" key={unit.id}><div className="adminUnitTop"><div className="adminUnitNumber">{unitIndex + 1}</div><input className="unitTitleInput" value={unit.label} onChange={(e) => update((d) => { d[unitIndex].label = e.target.value; })} /><div className="reorderButtons"><button disabled={unitIndex === 0} onClick={() => update((d) => { const item = d.splice(unitIndex, 1)[0]; d.splice(unitIndex - 1, 0, item); })}>↑</button><button disabled={unitIndex === units.length - 1} onClick={() => update((d) => { const item = d.splice(unitIndex, 1)[0]; d.splice(unitIndex + 1, 0, item); })}>↓</button><button className="deleteMini" onClick={() => update((d) => { d.splice(unitIndex, 1); })}>حذف</button></div></div><label className="blockField"><span>متن اصلی</span><textarea rows={textType === "poetry" ? 3 : 6} value={unit.text.join(textType === "poetry" ? "\n" : "\n\n")} onChange={(e) => update((d) => { d[unitIndex].text = e.target.value.split(textType === "poetry" ? /\n/ : /\n\s*\n/); })} /></label><div className="notesEditor"><div className="adminSubsectionHeader"><h4>توضیحات این پارت</h4><button className="smallButton" onClick={() => update((d) => d[unitIndex].notes.push({ kind: "meaning", title: "توضیح", text: "" }))}>+ افزودن توضیح</button></div>{unit.notes.map((note, noteIndex) => <NoteEditor key={noteIndex} note={note} onChange={(next) => update((d) => { d[unitIndex].notes[noteIndex] = next; })} onDelete={() => update((d) => { d[unitIndex].notes.splice(noteIndex, 1); })} />)}</div></article>)}</div>
++      {units.length === 0 && <div className="adminEmpty large">هنوز محتوایی برای این بخش ثبت نشده است.</div>}
++    </div>
++  );
++}
++
++function LiteraryPracticeEditor({ items, onChange }: { items: LiteraryPracticeItem[]; onChange: (items: LiteraryPracticeItem[]) => void }) {
++  const update = (fn: (draft: LiteraryPracticeItem[]) => void) => { const next = clone(items); fn(next); onChange(next); };
++  return <div><div className="adminPanelHeading"><div><h3>تمرین تشخیص آرایه</h3><p>بیت یا جمله را بنویس، آرایه‌های قابل انتخاب و پاسخ‌های صحیح را مشخص کن.</p></div><button className="button primary" onClick={() => update((d) => d.push({ id: `lp-${Date.now()}`, prompt: "", choices: ["تشبیه", "استعاره", "مجاز", "کنایه", "ایهام", "تلمیح"], correct: [], explanation: "" }))}>+ افزودن تمرین</button></div>{items.map((item, index) => <article className="adminQuestionEditor" key={item.id}><div className="adminMiniCardTop"><strong>تمرین {index + 1}</strong><button className="deleteMini" onClick={() => update((d) => { d.splice(index, 1); })}>حذف</button></div><label className="blockField"><span>بیت / جمله</span><textarea rows={3} value={item.prompt} onChange={(e) => update((d) => { d[index].prompt = e.target.value; })} /></label><label className="blockField"><span>آرایه‌های قابل انتخاب (با ویرگول جدا کن)</span><input value={item.choices.join("، ")} onChange={(e) => update((d) => { d[index].choices = splitTags(e.target.value); })} /></label><div className="artAnswerGrid">{item.choices.map((choice) => <label key={choice} className={`tagCheck ${item.correct.includes(choice) ? "active" : ""}`}><input type="checkbox" checked={item.correct.includes(choice)} onChange={(e) => update((d) => { d[index].correct = e.target.checked ? [...d[index].correct, choice] : d[index].correct.filter((x) => x !== choice); })} />{choice}</label>)}</div><label className="blockField"><span>توضیح پاسخ</span><textarea rows={3} value={item.explanation} onChange={(e) => update((d) => { d[index].explanation = e.target.value; })} /></label></article>)}{items.length === 0 && <div className="adminEmpty large">هنوز تمرین تشخیص آرایه ثبت نشده است.</div>}</div>;
++}
++
++function QuestionEditor({ questions, requiredTag, forceFinal = false, mutate }: { questions: TaggedQuestion[]; requiredTag: string; forceFinal?: boolean; mutate: (fn: (d: Lesson) => void) => void }) {
++  const visible = questions.map((q, index) => ({ q, index })).filter(({ q }) => forceFinal ? q.sourceType === "final" || q.tags.includes("امتحان نهایی") : q.tags.includes(requiredTag));
++  const add = () => mutate((d) => d.questions.push({ id: `q-${Date.now()}`, prompt: "", options: ["", "", "", ""], answer: 0, explanation: "", lessonHint: "", lessonAnchor: requiredTag, tags: forceFinal ? ["امتحان نهایی"] : [requiredTag], sourceType: forceFinal ? "final" : "authored", examPeriod: "" }));
++  return <div><div className="adminPanelHeading"><div><h3>{forceFinal ? "سؤالات امتحان نهایی" : `سؤالات — ${requiredTag}`}</h3><p>تگ‌ها تعیین می‌کنند سؤال در چه بخش‌هایی نمایش داده شود.</p></div><button className="button primary" onClick={add}>+ افزودن سؤال</button></div>{visible.map(({ q: question, index }) => <article className="adminQuestionEditor" key={question.id}><div className="adminMiniCardTop"><strong>سؤال</strong><button className="deleteMini" onClick={() => mutate((d) => { d.questions.splice(index, 1); })}>حذف</button></div><label className="blockField"><span>صورت سؤال</span><textarea rows={3} value={question.prompt} onChange={(e) => mutate((d) => { d.questions[index].prompt = e.target.value; })} /></label><div className="questionOptionsEditor">{question.options.map((option, optionIndex) => <label key={optionIndex} className={`questionOptionField ${question.answer === optionIndex ? "correct" : ""}`}><input type="radio" checked={question.answer === optionIndex} onChange={() => mutate((d) => { d.questions[index].answer = optionIndex; })} /><span>گزینه {optionIndex + 1}</span><input value={option} onChange={(e) => mutate((d) => { d.questions[index].options[optionIndex] = e.target.value; })} /></label>)}</div><div className="formGrid two compact"><label><span>توضیح پاسخ</span><textarea rows={3} value={question.explanation} onChange={(e) => mutate((d) => { d.questions[index].explanation = e.target.value; })} /></label><label><span>ارجاع آموزشی</span><input placeholder="مثلاً: آرایه ← بیت ۳" value={question.lessonHint ?? ""} onChange={(e) => mutate((d) => { d.questions[index].lessonHint = e.target.value; })} /></label></div><div className="formGrid two compact"><label><span>تگ‌ها (با ویرگول جدا کن)</span><input value={question.tags.join("، ")} onChange={(e) => mutate((d) => { const tags = splitTags(e.target.value); if (!tags.includes(requiredTag)) tags.unshift(requiredTag); if (forceFinal && !tags.includes("امتحان نهایی")) tags.unshift("امتحان نهایی"); d.questions[index].tags = tags; })} /></label><label><span>دوره امتحان</span><input placeholder="مثلاً خرداد ۱۴۰۴" value={question.examPeriod ?? ""} onChange={(e) => mutate((d) => { d.questions[index].examPeriod = e.target.value; if (e.target.value && !d.questions[index].tags.includes(e.target.value)) d.questions[index].tags.push(e.target.value); })} /></label></div><div className="tagPreview">{question.tags.map((tag) => <span key={tag}>{tag}</span>)}</div></article>)}{visible.length === 0 && <div className="adminEmpty large">هنوز سؤالی با تگ «{requiredTag}» ثبت نشده است.</div>}</div>;
++}
++
++function DomainsEditor({ lesson, mutate, subTab, setSubTab }: { lesson: Lesson; mutate: (fn: (d: Lesson) => void) => void; subTab: string; setSubTab: (v: string) => void }) {
++  const [level, setLevel] = useState<"normal" | "advanced">("normal");
++  const domainMap = { thinking: "قلمرو فکری", literary: "قلمرو ادبی", language: "قلمرو زبانی" } as const;
++  const domain = (subTab === "literary" || subTab === "language" ? subTab : "thinking") as keyof Lesson["domains"];
++  const units = lesson.domains[domain][level];
++  return <div className="adminPanel"><SubTabs value={domain} onChange={setSubTab} items={[{ key: "thinking", label: "قلمرو فکری" }, { key: "literary", label: "قلمرو ادبی" }, { key: "language", label: "قلمرو زبانی" }]} /><div className="levelSwitch"><button className={level === "normal" ? "active" : ""} onClick={() => setLevel("normal")}>عادی</button><button className={level === "advanced" ? "active" : ""} onClick={() => setLevel("advanced")}>پیشرفته</button></div><UnitCollectionEditor title={`${domainMap[domain]} — ${level === "normal" ? "عادی" : "پیشرفته"}`} units={units} textType={lesson.textType} onChange={(next) => mutate((d) => { d.domains[domain][level] = next; })} /></div>;
++}
++
++function SubTabs({ value, onChange, items }: { value: string; onChange: (v: string) => void; items: { key: string; label: string }[] }) {
++  const valid = items.some((item) => item.key === value) ? value : items[0]?.key;
++  return <div className="subTabs">{items.map((item) => <button key={item.key} className={valid === item.key ? "active" : ""} onClick={() => onChange(item.key)}>{item.label}</button>)}</div>;
++}
++
++function NoteEditor({ note, onChange, onDelete }: { note: TeachingNote; onChange: (note: TeachingNote) => void; onDelete: () => void }) {
++  return <div className="noteEditorRow"><select value={note.kind} onChange={(e) => onChange({ ...note, kind: e.target.value as NoteKind })}>{noteKinds.map((kind) => <option key={kind.value} value={kind.value}>{kind.label}</option>)}</select><input value={note.title} placeholder="عنوان توضیح" onChange={(e) => onChange({ ...note, title: e.target.value })} /><textarea rows={2} value={note.text} placeholder="توضیح این نکته..." onChange={(e) => onChange({ ...note, text: e.target.value })} /><button className="deleteMini" onClick={onDelete}>حذف</button></div>;
++}
++
++function splitTags(value: string) {
++  return value.split(/[،,]/).map((x) => x.trim()).filter(Boolean);
++}
+diff --git a/lib/data.ts b/lib/data.ts
+index bc5fcd5..03460af 100644
+--- a/lib/data.ts
++++ b/lib/data.ts
+@@ -20,12 +20,6 @@ export type TeachingUnit = {
+   notes: TeachingNote[];
+ };
+ 
+-export type LessonPart = {
+-  id: string;
+-  title: string;
+-  description: string;
+-};
+-
+ export type VocabularyItem = {
+   word: string;
+   quote: string;
+@@ -33,14 +27,37 @@ export type VocabularyItem = {
+   note?: string;
+ };
+ 
+-export type MCQ = {
++export type SpellingItem = {
++  word: string;
++  quote: string;
++  note?: string;
++  homophone?: string;
++};
++
++export type LiteraryPracticeItem = {
++  id: string;
++  prompt: string;
++  choices: string[];
++  correct: string[];
++  explanation: string;
++};
++
++export type TaggedQuestion = {
+   id: string;
+   prompt: string;
+   options: string[];
+   answer: number;
+   explanation: string;
+-  lessonHint: string;
+-  lessonAnchor: string;
++  lessonHint?: string;
++  lessonAnchor?: string;
++  tags: string[];
++  sourceType: "authored" | "final";
++  examPeriod?: string;
++};
++
++export type DomainLevel = {
++  normal: TeachingUnit[];
++  advanced: TeachingUnit[];
+ };
+ 
+ export type Lesson = {
+@@ -54,180 +71,150 @@ export type Lesson = {
+     format: string;
+     notes: string[];
+   };
+-  teachingUnits: TeachingUnit[];
+-  parts: LessonPart[];
+   vocabulary: VocabularyItem[];
+-  questions: MCQ[];
++  spelling: SpellingItem[];
++  meaningUnits: TeachingUnit[];
++  literaryUnits: TeachingUnit[];
++  literaryPractice: LiteraryPracticeItem[];
++  grammarUnits: TeachingUnit[];
++  domains: {
++    thinking: DomainLevel;
++    literary: DomainLevel;
++    language: DomainLevel;
++  };
++  reading: {
++    kind: "روان‌خوانی" | "حکایت" | "شعرخوانی" | "شعر حفظی" | "ندارد";
++    units: TeachingUnit[];
++  };
++  summaryUnits: TeachingUnit[];
++  questions: TaggedQuestion[];
+ };
+ 
++export const sectionCards = [
++  { key: "memorization", letter: "A", title: "حفظیات", description: "مقدمه، واژه‌نامه، جعبه لایتنر و املا", icon: "ح" },
++  { key: "meaning", letter: "B", title: "معنی و مفهوم", description: "درسنامه معنی و مفهوم + سؤال‌های آموزشی", icon: "م" },
++  { key: "literary", letter: "C", title: "آرایه‌های ادبی", description: "درسنامه، تمرین تشخیص آرایه و سؤال‌ها", icon: "آ" },
++  { key: "grammar", letter: "D", title: "دستور زبان", description: "درسنامه دستوری + سؤال‌ها", icon: "د" },
++  { key: "domains", letter: "E", title: "قلمروها", description: "فکری، ادبی و زبانی در سطح عادی و پیشرفته", icon: "ق" },
++  { key: "reading", letter: "F", title: "روان‌خوانی / حکایت / شعرخوانی", description: "بخش تکمیلی متناسب با نوع درس", icon: "ر" },
++  { key: "final", letter: "G", title: "سؤالات امتحان نهایی", description: "سؤالات دوره‌های قبل با تگ موضوع و دوره", icon: "ن" },
++  { key: "summary", letter: "H", title: "جمع‌بندی", description: "مرور سریع نکات مهم همان درس", icon: "ج" }
++] as const;
++
++export type SectionKey = (typeof sectionCards)[number]["key"];
++
+ export const lessons: Lesson[] = [
+   {
+     slug: "lesson-1",
+     title: "درس ۱ — نمونه شعر",
+-    subtitle: "نمونه ساختار بیت‌به‌بیت با توضیح‌های آموزشی زیر هر بیت",
++    subtitle: "نمونه ساختار جدید درس با بخش‌های مستقل",
+     textType: "poetry",
+     textTypeLabel: "نظم / شعر",
+     intro: {
+       author: "نمونه: شاعر",
+       format: "نمونه: غزل",
+-      notes: [
+-        "این درس فقط برای نمایش ساختار سایت است و بعداً با محتوای واقعی جایگزین می‌شود.",
+-        "در درس‌های شعری، هر بیت یک واحد مستقل آموزشی دارد.",
+-        "دانش‌آموز می‌تواند توضیح هر بیت را جداگانه بخواند."
+-      ]
++      notes: ["قالب و فضای کلی اثر", "ویژگی‌های مهم متن", "نکات کوتاه پیش از شروع درس"]
+     },
+-    teachingUnits: [
++    vocabulary: [
++      { word: "دوش", quote: "دوش دیدم که ملائک در میخانه زدند", meaning: "دیشب", note: "در بافت دیگر می‌تواند به معنی شانه باشد." },
++      { word: "طلب", quote: "دست از طلب ندارم تا کام من برآید", meaning: "جست‌وجو و کوشش", note: "در ترکیب «دست از طلب داشتن» معنای کنایی دارد." }
++    ],
++    spelling: [
++      { word: "ملائک", quote: "دوش دیدم که ملائک در میخانه زدند", note: "به همزه و ترتیب حروف توجه شود." }
++    ],
++    meaningUnits: [
+       {
+-        id: "verse-1",
++        id: "meaning-1",
+         label: "بیت ۱",
+         text: ["دوش دیدم که ملائک در میخانه زدند", "گل آدم بسرشتند و به پیمانه زدند"],
+         notes: [
+-          {
+-            kind: "meaning",
+-            title: "معنی روان",
+-            text: "دیشب در رؤیا دیدم که فرشتگان به میخانه رفتند و سرشت آدمی را با عشق آمیختند."
+-          },
+-          {
+-            kind: "vocabulary",
+-            title: "واژه مهم",
+-            text: "«دوش» در این بیت به معنی «دیشب» است."
+-          },
+-          {
+-            kind: "literary",
+-            title: "نکته ادبی",
+-            text: "میخانه و پیمانه در این فضا می‌توانند معنایی فراتر از معنای ظاهری داشته باشند."
+-          },
+-          {
+-            kind: "exam",
+-            title: "نکته امتحانی",
+-            text: "به معنی واژه «دوش» و مفهوم کلی بیت توجه ویژه داشته باش."
+-          }
++          { kind: "meaning", title: "معنی روان", text: "دیشب در رؤیا دیدم که فرشتگان سرشت آدمی را با عشق آمیختند." },
++          { kind: "concept", title: "مفهوم", text: "اشاره به آفرینش انسان و پیوند او با عشق." }
+         ]
+-      },
++      }
++    ],
++    literaryUnits: [
+       {
+-        id: "verse-2",
+-        label: "بیت ۲",
+-        text: ["دست از طلب ندارم تا کام من برآید", "یا تن رسد به جانان یا جان ز تن برآید"],
++        id: "literary-1",
++        label: "بیت ۱",
++        text: ["دوش دیدم که ملائک در میخانه زدند", "گل آدم بسرشتند و به پیمانه زدند"],
+         notes: [
+-          {
+-            kind: "meaning",
+-            title: "معنی روان",
+-            text: "تا رسیدن به مقصود از تلاش دست نمی‌کشم؛ یا به محبوب می‌رسم یا جانم را در این راه می‌دهم."
+-          },
+-          {
+-            kind: "concept",
+-            title: "مفهوم",
+-            text: "پایداری، تلاش و دست نکشیدن از هدف."
+-          },
+-          {
+-            kind: "vocabulary",
+-            title: "واژه و عبارت",
+-            text: "«کام» یعنی آرزو و مراد؛ «دست از طلب داشتن» کنایه از رها کردن تلاش است."
+-          },
+-          {
+-            kind: "literary",
+-            title: "آرایه",
+-            text: "ساختار تقابلی میان رسیدن به جانان و جان دادن، شدت اراده گوینده را نشان می‌دهد."
+-          }
++          { kind: "literary", title: "آرایه‌های مهم", text: "میخانه و پیمانه ظرفیت معنایی نمادین دارند و باید در بافت بررسی شوند." }
+         ]
+       }
+     ],
+-    parts: [
+-      { id: "vocabulary", title: "واژه‌نامه", description: "معنی واژه در بافت، جمله یا بیت اصلی، نکته‌ها و چندمعنایی‌ها." },
+-      { id: "spelling", title: "املا", description: "کلمات ارزش‌دار املایی، هم‌آواها و دام‌های پرتکرار." },
+-      { id: "meaning", title: "معنی و مفهوم", description: "معنی روان، تحلیل عبارت، مفهوم اصلی و پیوند با بیت‌های هم‌مفهوم." },
+-      { id: "literary", title: "آرایه‌های ادبی", description: "بررسی آرایه‌های موجود، دام‌های رایج و توضیح دلیل هر مورد." },
+-      { id: "grammar", title: "دستور زبان", description: "نقش‌ها، فعل، گروه اسمی، تعداد جمله و سایر نکات قابل طرح." },
+-      { id: "domains", title: "قلمروها", description: "قلمرو زبانی، ادبی و فکری در دو سطح عادی و پیشرفته." }
++    literaryPractice: [
++      {
++        id: "lp-1",
++        prompt: "دوش دیدم که ملائک در میخانه زدند",
++        choices: ["تشبیه", "استعاره", "مجاز", "کنایه", "تلمیح", "واج‌آرایی"],
++        correct: ["استعاره"],
++        explanation: "این داده صرفاً نمونه است؛ پاسخ واقعی بر اساس محتوای نهایی درس جایگزین می‌شود."
++      }
+     ],
+-    vocabulary: [
+-      { word: "دوش", quote: "دوش دیدم که ملائک در میخانه زدند", meaning: "دیشب", note: "در بافتی دیگر می‌تواند به معنی «شانه» باشد." },
+-      { word: "طلب", quote: "دست از طلب ندارم تا کام من برآید", meaning: "جست‌وجو و کوشش برای رسیدن به مقصود", note: "در ترکیب «دست از طلب داشتن» معنای کنایی پیدا می‌کند." },
+-      { word: "کام", quote: "تا کام من برآید", meaning: "آرزو و مراد", note: "در برخی بافت‌ها «کام» به معنی دهان هم به کار می‌رود." }
++    grammarUnits: [
++      {
++        id: "grammar-1",
++        label: "بیت ۲",
++        text: ["دست از طلب ندارم تا کام من برآید"],
++        notes: [{ kind: "grammar", title: "نکته دستوری", text: "نقش‌ها و ساختار جمله در این قسمت تحلیل می‌شود." }]
++      }
++    ],
++    domains: {
++      thinking: {
++        normal: [{ id: "think-normal-1", label: "قلمرو فکری عادی", text: ["مفهوم بیت چیست؟"], notes: [{ kind: "concept", title: "پاسخ", text: "پایداری در راه رسیدن به هدف." }] }],
++        advanced: [{ id: "think-advanced-1", label: "قلمرو فکری پیشرفته", text: ["این مفهوم با کدام بخش‌های دیگر کتاب پیوند دارد؟"], notes: [{ kind: "concept", title: "بررسی پیشرفته", text: "پیوندهای مفهومی و بیت‌های هم‌معنا اینجا بررسی می‌شوند." }] }]
++      },
++      literary: { normal: [], advanced: [] },
++      language: { normal: [], advanced: [] }
++    },
++    reading: { kind: "شعرخوانی", units: [] },
++    summaryUnits: [
++      { id: "summary-1", label: "مرور سریع", text: ["واژه‌های مهم، مفهوم‌ها و نکات پرتکرار این درس"], notes: [{ kind: "exam", title: "برای جمع‌بندی", text: "این بخش بعداً با محتوای واقعی کامل می‌شود." }] }
+     ],
+     questions: [
+       {
+         id: "q1",
+-        prompt: "در عبارت «دست از طلب ندارم»، «طلب» به کدام معنی نزدیک‌تر است؟",
+-        options: ["خواب", "کوشش و جست‌وجو", "گفت‌وگو", "ترس"],
++        prompt: "معنی «دوش» در این بیت چیست؟",
++        options: ["شانه", "دیشب", "امروز", "صبح"],
+         answer: 1,
+-        explanation: "در این بافت، «طلب» به معنی خواستن و کوشش برای رسیدن به مقصود است.",
+-        lessonHint: "واژه‌نامه ← «طلب»",
+-        lessonAnchor: "vocabulary"
++        explanation: "در این بافت «دوش» به معنی دیشب است.",
++        lessonHint: "حفظیات ← واژه‌نامه",
++        lessonAnchor: "memorization",
++        tags: ["واژه", "حفظیات"],
++        sourceType: "authored"
+       },
+       {
+         id: "q2",
+-        prompt: "معنی «دوش» در «دوش دیدم که ملائک...» چیست؟",
+-        options: ["شانه", "امروز", "دیشب", "صبح"],
+-        answer: 2,
+-        explanation: "قرینه جمله نشان می‌دهد که «دوش» در این بیت به معنی «دیشب» است.",
+-        lessonHint: "واژه‌نامه ← «دوش»",
+-        lessonAnchor: "vocabulary"
+-      },
+-      {
+-        id: "q3",
+-        prompt: "کدام گزینه بهترین توضیح برای «دست از طلب ندارم» است؟",
+-        options: ["دستم درد می‌کند", "از تلاش دست نمی‌کشم", "چیزی را با دست می‌خواهم", "از دیگران کمک نمی‌گیرم"],
++        prompt: "مفهوم اصلی «دست از طلب ندارم...» چیست؟",
++        options: ["ناامیدی", "پایداری", "سکوت", "ترس"],
+         answer: 1,
+-        explanation: "این عبارت کنایه از ادامه دادن تلاش و ناامید نشدن است.",
+-        lessonHint: "معنی و مفهوم ← تحلیل عبارت",
+-        lessonAnchor: "meaning"
+-      }
+-    ]
+-  },
+-  {
+-    slug: "lesson-2",
+-    title: "درس ۲ — نمونه نثر",
+-    subtitle: "نمونه ساختار پاراگراف‌به‌پاراگراف با توضیح‌های مربوط به همان بخش",
+-    textType: "prose",
+-    textTypeLabel: "نثر",
+-    intro: {
+-      author: "نمونه: نویسنده",
+-      format: "نثر آموزشی",
+-      notes: [
+-        "در درس‌های نثر، هر یک یا دو پاراگراف یک واحد آموزشی مستقل می‌شود.",
+-        "توضیح‌های هر پارت دقیقاً زیر همان متن دیده می‌شود."
+-      ]
+-    },
+-    teachingUnits: [
+-      {
+-        id: "paragraph-1",
+-        label: "بخش ۱",
+-        text: [
+-          "این یک پاراگراف نمونه برای نمایش شکل تدریس درس‌های نثر است. متن واقعی کتاب در این قسمت قرار می‌گیرد.",
+-          "در صورت مرتبط بودن دو پاراگراف، می‌توان هر دو را در یک پارت نمایش داد."
+-        ],
+-        notes: [
+-          { kind: "meaning", title: "معنی و توضیح", text: "در این کارت، توضیح ساده و روان همان پاراگراف نوشته می‌شود." },
+-          { kind: "vocabulary", title: "واژگان مهم", text: "واژه‌های مهم همین قسمت همراه با معنی در بافت قرار می‌گیرند." },
+-          { kind: "grammar", title: "نکته زبانی", text: "اگر در این پاراگراف نکته دستوری مهمی وجود داشته باشد، همین‌جا نمایش داده می‌شود." }
+-        ]
++        explanation: "بیت بر ادامه تلاش تا رسیدن به مقصود تأکید دارد.",
++        lessonHint: "معنی و مفهوم",
++        lessonAnchor: "meaning",
++        tags: ["معنی و مفهوم", "قلمرو فکری"],
++        sourceType: "authored"
+       },
+       {
+-        id: "paragraph-2",
+-        label: "بخش ۲",
+-        text: [
+-          "پاراگراف بعدی درس در کارت جداگانه‌ای می‌آید تا دانش‌آموز متن و توضیحات را مرحله‌به‌مرحله دنبال کند."
+-        ],
+-        notes: [
+-          { kind: "concept", title: "مفهوم اصلی", text: "خلاصه مفهوم این بخش در چند خط کوتاه نوشته می‌شود." },
+-          { kind: "exam", title: "نکته امتحانی", text: "اگر این بخش نکته پرتکرار امتحانی داشته باشد، به صورت برجسته نشان داده می‌شود." }
+-        ]
++        id: "q-final-1",
++        prompt: "نمونه سؤال نهایی مرتبط با آرایه این درس",
++        options: ["گزینه ۱", "گزینه ۲", "گزینه ۳", "گزینه ۴"],
++        answer: 0,
++        explanation: "توضیح نمونه پاسخ.",
++        lessonHint: "آرایه‌های ادبی",
++        lessonAnchor: "literary",
++        tags: ["آرایه", "امتحان نهایی", "خرداد ۱۴۰۴"],
++        sourceType: "final",
++        examPeriod: "خرداد ۱۴۰۴"
+       }
+-    ],
+-    parts: [
+-      { id: "vocabulary", title: "واژه‌نامه", description: "آموزش و تمرین واژگان." },
+-      { id: "spelling", title: "املا", description: "نکات املایی." },
+-      { id: "meaning", title: "معنی و مفهوم", description: "معنی و مفهوم متن." },
+-      { id: "literary", title: "آرایه‌های ادبی", description: "آرایه‌ها و دام‌ها." },
+-      { id: "grammar", title: "دستور زبان", description: "نکات دستوری." },
+-      { id: "domains", title: "قلمروها", description: "قلمرو زبانی، ادبی و فکری." }
+-    ],
+-    vocabulary: [],
+-    questions: []
++    ]
+   }
+ ];
+ 
+ export function getLesson(slug: string) {
+   return lessons.find((lesson) => lesson.slug === slug);
+ }
++
++export function questionsByTags(lesson: Lesson, tags: string[]) {
++  return lesson.questions.filter((question) => tags.some((tag) => question.tags.includes(tag)));
++}
