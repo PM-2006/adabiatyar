@@ -11,8 +11,8 @@ import {
   type LiteraryPracticeItem
 } from "@/lib/data";
 
-const STORAGE_KEY = "adabiatyar-admin-content-v2";
-const LEGACY_STORAGE_KEY = "adabiatyar-admin-content-v1";
+import { createLesson, migrateLesson } from "@/lib/content-migration";
+import { loadContentLessons, saveContentLessons, resetContentLessons } from "@/lib/client-content";
 
 type MainTab = "general" | "memorization" | "meaning" | "literary" | "grammar" | "domains" | "reading" | "final" | "summary";
 
@@ -27,83 +27,6 @@ const noteKinds: { value: NoteKind; label: string }[] = [
 ];
 
 const clone = <T,>(value: T): T => JSON.parse(JSON.stringify(value));
-
-function blankDomain() {
-  return { normal: [] as TeachingUnit[], advanced: [] as TeachingUnit[] };
-}
-
-function createLesson(index: number): Lesson {
-  return {
-    slug: `lesson-${index + 1}`,
-    title: `درس ${index + 1}`,
-    subtitle: "عنوان یا توضیح کوتاه درس",
-    textType: "prose",
-    textTypeLabel: "نثر",
-    intro: { author: "", format: "", notes: [] },
-    vocabulary: [],
-    spelling: [],
-    meaningUnits: [],
-    literaryUnits: [],
-    literaryPractice: [],
-    grammarUnits: [],
-    domains: { thinking: blankDomain(), literary: blankDomain(), language: blankDomain() },
-    reading: { kind: "ندارد", units: [] },
-    summaryUnits: [],
-    questions: []
-  };
-}
-
-function migrateQuestion(q: any, index: number): TaggedQuestion {
-  const anchor = q.lessonAnchor ?? "meaning";
-  const tags = Array.isArray(q.tags) && q.tags.length
-    ? q.tags
-    : anchor === "vocabulary" ? ["واژه", "حفظیات"]
-      : anchor === "literary" ? ["آرایه"]
-        : anchor === "grammar" ? ["دستور زبان"]
-          : ["معنی و مفهوم"];
-  return {
-    id: q.id ?? `q-${Date.now()}-${index}`,
-    prompt: q.prompt ?? "",
-    options: Array.isArray(q.options) && q.options.length ? q.options : ["", "", "", ""],
-    answer: Number.isInteger(q.answer) ? q.answer : 0,
-    explanation: q.explanation ?? "",
-    lessonHint: q.lessonHint ?? "",
-    lessonAnchor: anchor,
-    tags,
-    sourceType: q.sourceType === "final" ? "final" : "authored",
-    examPeriod: q.examPeriod ?? ""
-  };
-}
-
-function migrateLesson(raw: any, index: number): Lesson {
-  if (raw?.meaningUnits && raw?.domains && raw?.reading) {
-    return {
-      ...createLesson(index),
-      ...raw,
-      questions: (raw.questions ?? []).map(migrateQuestion),
-      domains: {
-        thinking: { ...blankDomain(), ...(raw.domains?.thinking ?? {}) },
-        literary: { ...blankDomain(), ...(raw.domains?.literary ?? {}) },
-        language: { ...blankDomain(), ...(raw.domains?.language ?? {}) }
-      },
-      reading: { kind: raw.reading?.kind ?? "ندارد", units: raw.reading?.units ?? [] }
-    };
-  }
-
-  const fallback = createLesson(index);
-  return {
-    ...fallback,
-    slug: raw?.slug ?? fallback.slug,
-    title: raw?.title ?? fallback.title,
-    subtitle: raw?.subtitle ?? fallback.subtitle,
-    textType: raw?.textType ?? "prose",
-    textTypeLabel: raw?.textTypeLabel ?? "نثر",
-    intro: raw?.intro ?? fallback.intro,
-    vocabulary: raw?.vocabulary ?? [],
-    meaningUnits: raw?.teachingUnits ?? [],
-    questions: (raw?.questions ?? []).map(migrateQuestion)
-  };
-}
 
 function downloadJson(data: Lesson[]) {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
@@ -127,17 +50,12 @@ export default function AdminStudio() {
   const importRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
-    if (!raw) return;
-    try {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        const migrated = parsed.map(migrateLesson);
-        setLessons(migrated);
-        setSelectedSlug(migrated[0].slug);
-        setSavedLabel("نسخه ذخیره‌شده مرورگر بارگذاری شد");
-      }
-    } catch {
+    const content = loadContentLessons();
+    if (content.source === "saved") {
+      setLessons(content.lessons);
+      setSelectedSlug(content.lessons[0]?.slug ?? "");
+      setSavedLabel("نسخه ذخیره‌شده مرورگر بارگذاری شد");
+    } else if (content.source === "unreadable") {
       setSavedLabel("نسخه ذخیره‌شده قابل خواندن نبود");
     }
   }, []);
@@ -172,8 +90,7 @@ export default function AdminStudio() {
   }
 
   function saveLocal() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(lessons));
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    saveContentLessons(lessons);
     setDirty(false);
     setSavedLabel(`ذخیره شد — ${new Date().toLocaleTimeString("fa-IR", { hour: "2-digit", minute: "2-digit" })}`);
   }
@@ -205,8 +122,7 @@ export default function AdminStudio() {
 
   function resetAll() {
     if (!window.confirm("همه تغییرات مرورگر پاک و محتوای نمونه اولیه برگردانده شود؟")) return;
-    localStorage.removeItem(STORAGE_KEY);
-    localStorage.removeItem(LEGACY_STORAGE_KEY);
+    resetContentLessons();
     const next = clone(seedLessons);
     setLessons(next);
     setSelectedSlug(next[0]?.slug ?? "");

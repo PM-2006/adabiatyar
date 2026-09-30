@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
-import { lessons } from "@/lib/data";
+import { useContentLessons } from "@/lib/client-content";
+import ContentLoading from "@/components/content-loading";
 
 export default function LessonsPage() {
+  const { lessons, ready } = useContentLessons();
+  if (!ready) return <ContentLoading />;
   return (
     <section className="shell section">
       <div className="sectionHeading">
