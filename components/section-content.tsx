@@ -1,5 +1,6 @@
 "use client";
 
+import { useId, useRef, useState } from "react";
 import { useContentLessons } from "@/lib/client-content";
 import ContentLoading from "@/components/content-loading";
 import Link from "next/link";
@@ -20,6 +21,7 @@ const noteLabels: Record<string, string> = {
 
 function Units({ units, poetry }: { units: TeachingUnit[]; poetry: boolean }) {
   if (!units.length) return <div className="emptyState">هنوز محتوایی برای این قسمت ثبت نشده است.</div>;
+  if (poetry) return <PoetryUnits units={units} />;
   return (
     <div className="readingTimeline compactTimeline">
       {units.map((unit, index) => (
@@ -38,6 +40,58 @@ function Units({ units, poetry }: { units: TeachingUnit[]; poetry: boolean }) {
   );
 }
 
+function PoetryUnits({ units }: { units: TeachingUnit[] }) {
+  const [selectedId, setSelectedId] = useState(units[0].id);
+  const [listOpen, setListOpen] = useState(false);
+  const listId = useId();
+  const heading = useRef<HTMLHeadingElement>(null);
+  const reader = useRef<HTMLDivElement>(null);
+  const activeIndex = Math.max(0, units.findIndex((unit) => unit.id === selectedId));
+  const unit = units[activeIndex];
+  const number = (value: number) => value.toLocaleString("fa-IR");
+
+  function selectUnit(index: number) {
+    if (index < 0 || index >= units.length) return;
+    setSelectedId(units[index].id);
+    setListOpen(false);
+    heading.current?.focus({ preventScroll: true });
+    reader.current?.scrollIntoView({ block: "start", behavior: "instant" });
+  }
+
+  return (
+    <div ref={reader} className={`verseReader${listOpen ? " verseReaderWithList" : ""}`}>
+      <aside className="verseIndex">
+        <button className="verseIndexToggle" type="button" aria-expanded={listOpen} aria-controls={listId} onClick={() => setListOpen(!listOpen)}>
+          <span aria-hidden="true">☰</span> فهرست بیت‌ها <span aria-hidden="true">{listOpen ? "−" : "+"}</span>
+        </button>
+        <nav id={listId} className="verseIndexList" aria-label="انتخاب بیت" hidden={!listOpen}>
+          {units.map((item, index) => (
+            <button key={item.id} type="button" aria-current={index === activeIndex ? "step" : undefined} onClick={() => selectUnit(index)}>
+              <strong>بیت {number(index + 1)}</strong>
+              <span>{item.text.find((line) => line.trim()) || item.label || "بدون متن"}</span>
+            </button>
+          ))}
+        </nav>
+      </aside>
+      <div className="versePage">
+        <h3 className="verseProgress" ref={heading} tabIndex={-1} aria-live="polite" aria-atomic="true">بیت {number(activeIndex + 1)} از {number(units.length)}</h3>
+        <article className="verseArticle" aria-label={`بیت ${number(activeIndex + 1)}`}>
+          <div className="unitLabel">{unit.label}</div>
+          <div className="sourceText poetryText">{unit.text.map((line, index) => <p key={index}>{line}</p>)}</div>
+          <div className="unitNotes">
+            {unit.notes.map((note, index) => <div className={`noteCard note-${note.kind}`} key={index}><div className="noteHead"><span className="noteKind">{noteLabels[note.kind] ?? note.kind}</span><h3>{note.title}</h3></div><p>{note.text}</p></div>)}
+          </div>
+        </article>
+        <nav className="verseNavigation" aria-label="پیمایش بیت‌ها">
+          <button className="button secondary" type="button" disabled={activeIndex === 0} onClick={() => selectUnit(activeIndex - 1)}><span aria-hidden="true">→</span> بیت قبلی</button>
+          <span className="versePageNumber" aria-hidden="true">{number(activeIndex + 1)} / {number(units.length)}</span>
+          <button className="button primary" type="button" disabled={activeIndex === units.length - 1} onClick={() => selectUnit(activeIndex + 1)}>بیت بعدی <span aria-hidden="true">←</span></button>
+        </nav>
+      </div>
+    </div>
+  );
+}
+
 export default function SectionContent({ slug, section }: { slug: string; section: string }) {
   const { lessons, ready } = useContentLessons();
   if (!ready) return <ContentLoading />;
@@ -47,7 +101,7 @@ export default function SectionContent({ slug, section }: { slug: string; sectio
   const poetry = lesson.textType === "poetry";
 
   return (
-    <section className="shell section lessonSectionPage">
+    <section className="shell section lessonSectionPage" key={`${slug}:${section}`}>
       <div className="breadcrumb"><Link href="/lessons">درس‌ها</Link><span>/</span><Link href={`/lessons/${slug}`}>{lesson.title}</Link><span>/</span><span>{meta.title}</span></div>
       <div className="sectionPageHeader"><span className="sectionLetter large">{meta.letter}</span><div><span className="eyebrow">{lesson.title}</span><h1>{meta.title}</h1><p>{meta.description}</p></div></div>
 
